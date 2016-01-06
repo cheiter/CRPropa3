@@ -77,6 +77,14 @@ int Particle::Generation() {
   return fgeneration;
 }
 
+double Particle::GetDeflection() const {
+  return fdeflection;
+}
+
+void Particle::SetDeflection(double _fdefl) {
+  fdeflection = _fdefl;
+}
+
 Particle::Particle(int _ft, double _fE, double _fz, int _fgeneration) {
 	ftype = _ft;
 	fE0ph = _fE;
@@ -85,6 +93,7 @@ Particle::Particle(int _ft, double _fE, double _fz, int _fgeneration) {
 	fIsGood = IsGood();
 	fwi = 1;
   fgeneration = _fgeneration;
+  fdeflection = 0.;
 }
 
 Particle::Particle() {
@@ -95,6 +104,8 @@ Particle::Particle() {
 	fbeta = 0;
 	fIsGood = 0;
 	fwi = 1;
+  fgeneration = 0;
+  fdeflection = 0;
 }
 
 } // namespace eleca

@@ -514,6 +514,9 @@ void Propagation::Propagate(Particle &curr_particle,
 		theta_deflBF = GetMeanThetaBFDeflection(BNorm,
 				curr_particle.GetEnergy(), curr_particle.GetType(), min_dist);
 		corrB_factor = cos(theta_deflBF);
+    double a = pow(curr_particle.GetDeflection(),2.);
+    double b = pow(GetMeanThetaBFDeflection(BNorm,curr_particle.GetEnergy(), curr_particle.GetType(), realpath),2.);
+    curr_particle.SetDeflection(sqrt(a+b));
 
 		stepsize = realpath * corrB_factor;
 		dz = Mpc2z(stepsize);
@@ -576,10 +579,12 @@ void Propagation::Propagate(Particle &curr_particle,
 
 			Particle pp(11, E1, z_curr,curr_particle.Generation()+1);
 			pp.SetWeigth(wi_last);
+      pp.SetDeflection(curr_particle.GetDeflection());
 			ParticleAtMatrix.push_back(pp);
 
 			Particle pe(-11, Ecurr - E1, z_curr,curr_particle.Generation()+1);
 			pe.SetWeigth(wi_last);
+      pe.SetDeflection(curr_particle.GetDeflection());
 			ParticleAtMatrix.push_back(pe);
 			return;
 		} //if PP
@@ -590,10 +595,12 @@ void Propagation::Propagate(Particle &curr_particle,
 
 			Particle pp(11, E1, z_curr,curr_particle.Generation()+1);
 			pp.SetWeigth(wi_last);
+      pp.SetDeflection(curr_particle.GetDeflection());
 			ParticleAtMatrix.push_back(pp);
 			
 			Particle pe(-11, E1, z_curr,curr_particle.Generation()+1);
 			pe.SetWeigth(wi_last);
+      pe.SetDeflection(curr_particle.GetDeflection());
 			ParticleAtMatrix.push_back(pe);
 
 			return;
@@ -608,9 +615,11 @@ void Propagation::Propagate(Particle &curr_particle,
 
 			Particle pp(curr_particle.GetType(), E1, z_curr,curr_particle.Generation()+1);
 			pp.SetWeigth(wi_last);
+      pp.SetDeflection(curr_particle.GetDeflection());
 			ParticleAtMatrix.push_back(pp);
 			Particle pg(22, E2, z_curr,curr_particle.Generation()+1);
 			pg.SetWeigth(wi_last);
+      pg.SetDeflection(curr_particle.GetDeflection());
 			ParticleAtMatrix.push_back(pg);
 
 			return;
@@ -624,14 +633,17 @@ void Propagation::Propagate(Particle &curr_particle,
 
 			Particle pp(11, E1, z_curr,curr_particle.Generation()+1);
 			pp.SetWeigth(wi_last);
+      pp.SetDeflection(curr_particle.GetDeflection());
 			ParticleAtMatrix.push_back(pp);
 			
 			Particle pe(-11, E1, z_curr,curr_particle.Generation()+1);
 			pe.SetWeigth(wi_last);
+      pe.SetDeflection(curr_particle.GetDeflection());
 			ParticleAtMatrix.push_back(pe);
 			
 			Particle psc(curr_particle.GetType(), E3, z_curr,curr_particle.Generation()+1);
 			psc.SetWeigth(wi_last);
+      psc.SetDeflection(curr_particle.GetDeflection());
 			ParticleAtMatrix.push_back(psc);
 			return;
 		}

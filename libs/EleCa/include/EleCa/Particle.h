@@ -15,6 +15,7 @@ private:
 	bool fIsGood;
 	int fwi;
   int fgeneration;
+  double fdeflection;
 
 public:
 	Particle();
@@ -49,6 +50,10 @@ public:
 	void SetBetaAndMass();
 
   int Generation();
+
+  double GetDeflection() const;
+
+  void SetDeflection(double _fdefl = 0.);
 
 
 
