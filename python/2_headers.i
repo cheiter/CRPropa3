@@ -52,6 +52,7 @@
 #include "crpropa/magneticField/QuimbyMagneticField.h"
 #include "crpropa/magneticField/AMRMagneticField.h"
 #include "crpropa/magneticField/JF12Field.h"
+#include "crpropa/magneticField/PshirkovField.h"
 #include "crpropa/magneticField/TurbulentMagneticField.h"
 
 #include "crpropa/Referenced.h"
@@ -138,6 +139,7 @@
 %include "crpropa/magneticField/QuimbyMagneticField.h"
 %include "crpropa/magneticField/AMRMagneticField.h"
 %include "crpropa/magneticField/JF12Field.h"
+%include "crpropa/magneticField/PshirkovField.h"
 %include "crpropa/magneticField/TurbulentMagneticField.h"
 
 %include "crpropa/module/BreakCondition.h"
