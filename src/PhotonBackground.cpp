@@ -65,6 +65,7 @@ double photonFieldScaling(PhotonField photonField, double z) {
 		return scalingDominguez11.scalingFactor(z);
 	case IRB_Gilmore12:
 		return scalingGilmore12.scalingFactor(z);
+  case URB_Protheroe96:
 	case IRB_withRedshift_Kneiske04:
 	case IRB_withRedshift_Franceschini08:
 	case IRB_withRedshift_Finke10:
