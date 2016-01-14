@@ -24,42 +24,50 @@ void EMTripletPairProduction::setPhotonField(PhotonField photonField) {
 		setDescription("EMTripletPairProduction: CMB");
 		initRate(getDataPath("EMTripletPairProduction_CMB.txt"));
 		initCumulativeRate(getDataPath("EMTripletPairProduction_CDF_CMB.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_CMB.txt"));
 		break;
 	case IRB:  // default: Kneiske '04 IRB model
 	case IRB_Kneiske04:
 		setDescription("EMTripletPairProduction: IRB (Kneiske 2004)");
 		initRate(getDataPath("EMTripletPairProduction_IRB_Kneiske04.txt"));
 		initCumulativeRate(getDataPath("EMTripletPairProduction_CDF_IRB_Kneiske04.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
 		break;
 	case IRB_Stecker05:
 		setDescription("EMTripletPairProduction: IRB (Stecker 2005)");
 		initRate(getDataPath("EMTripletPairProduction_IRB_Stecker05.txt"));
 		initCumulativeRate(getDataPath("EMTripletPairProduction_CDF_IRB_Stecker05.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
 		break;
 	case IRB_Franceschini08:
 		setDescription("EMTripletPairProduction: IRB (Franceschini 2008)");
 		initRate(getDataPath("EMTripletPairProduction_IRB_Franceschini08.txt"));
 		initCumulativeRate(getDataPath("EMTripletPairProduction_CDF_IRB_Franceschini08.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
 		break;
 	case IRB_Finke10:
 		setDescription("EMTripletPairProduction: IRB (Finke 2010)");
 		initRate(getDataPath("EMTripletPairProduction_IRB_Finke10.txt"));
 		initCumulativeRate(getDataPath("EMTripletPairProduction_CDF_IRB_Finke10.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
 		break;
 	case IRB_Dominguez11:
 		setDescription("EMTripletPairProduction: IRB (Dominguez 2011)");
 		initRate(getDataPath("EMTripletPairProduction_IRB_Dominguez11.txt"));
 		initCumulativeRate(getDataPath("EMTripletPairProduction_CDF_IRB_Dominguez11.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
 		break;
 	case IRB_Gilmore12:
 		setDescription("EMTripletPairProduction: IRB (Gilmore 2012)");
 		initRate(getDataPath("EMTripletPairProduction_IRB_Gilmore12.txt"));
 		initCumulativeRate(getDataPath("EMTripletPairProduction_CDF_IRB_Gilmore12.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
 		break;
 	case URB_Protheroe96:
 		setDescription("EMTripletPairProduction: URB (Protheroe 1996)");
 		initRate(getDataPath("EMTripletPairProduction_URB_Protheroe96.txt"));
 		initCumulativeRate(getDataPath("EMTripletPairProduction_CDF_URB_Protheroe96.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_URB.txt"));
 		break;
 	default:
 		throw std::runtime_error(
@@ -127,6 +135,30 @@ void EMTripletPairProduction::initCumulativeRate(std::string filename) {
 	infile.close();
 }
 
+void EMTripletPairProduction::initEleCaStuff(std::string filename) {
+	std::ifstream infile(filename.c_str());
+
+	if (!infile.good())
+		throw std::runtime_error(
+				"EMTripletPairProduction: could not open file " + filename);
+
+	// clear previously loaded interaction rates
+	tabEps.clear();
+  tabCDF.clear();
+
+	while (infile.good()) {
+		if (infile.peek() != '#') {
+			double a, b;
+			infile >> a >> b;
+			if (infile) {
+				tabEps.push_back(a*eV);
+        tabCDF.push_back(b);
+			}
+		}
+		infile.ignore(std::numeric_limits < std::streamsize > ::max(), '\n');
+	}
+	infile.close();
+}
 void EMTripletPairProduction::performInteraction(Candidate *candidate) const {
 
   //approximation based on A. Mastichiadis et al.,
@@ -142,30 +174,62 @@ void EMTripletPairProduction::performInteraction(Candidate *candidate) const {
   double Epp = 0.;
 
   if (haveElectrons){
-    // interpolate between tabulated electron energies to get corresponding cdf
-    size_t i = std::upper_bound(tabE.begin(), tabE.end(), E) - tabE.begin() - 500; 
-    double a = (E - tabE[i]) / (tabE[i + 500] - tabE[i]);
+//    // interpolate between tabulated electron energies to get corresponding cdf
+//    size_t i = std::upper_bound(tabE.begin(), tabE.end(), E) - tabE.begin() - 500; 
+//    double a = (E - tabE[i]) / (tabE[i + 500] - tabE[i]);
+//
+//    std::vector<double> cdf(500);
+//    for (size_t j = 0; j < 500; j++)
+//      cdf[j] = tabCumulativeRate[i+j] + a * (tabCumulativeRate[i+500+j] - tabCumulativeRate[i+j]);
+//
+//    // draw random value between 0. and maximum of corresponding cdf
+//    // choose bin of eps where cdf(eps) = cdf_rand -> eps_rand
+//    Random &random = Random::instance();
+//    size_t j = random.randBin(cdf); // draw random bin
+//    double binWidth = (tabs[i+j+1] - tabs[i+j]);
+//    double eps = (tabs[i+j] + random.rand() * binWidth)/4./E; // draw random uniform background photon energy in bin, note that one needs to convert tablulated eps back to s_kin and calculate right eps with real electron energy
 
-    std::vector<double> cdf(500);
-    for (size_t j = 0; j < 500; j++)
-      cdf[j] = tabCumulativeRate[i+j] + a * (tabCumulativeRate[i+500+j] - tabCumulativeRate[i+j]);
 
+    // EleCa method:
     // draw random value between 0. and maximum of corresponding cdf
     // choose bin of eps where cdf(eps) = cdf_rand -> eps_rand
+    double mec2 = mass_electron * c_squared;
     Random &random = Random::instance();
-    size_t j = random.randBin(cdf); // draw random bin
-    double binWidth = (tabs[i+j+1] - tabs[i+j]);
-    double eps = (tabs[i+j] + random.rand() * binWidth)/4./E; // draw random uniform background photon energy in bin, note that one needs to convert tablulated eps back to s_kin and calculate right eps with real electron energy
+    double eps = 0.;
+    double min = 8. * mec2 * mec2 / 4. / E; // eig 9
+    std::vector<double>::const_iterator it;
+    it = std::lower_bound(tabEps.begin(), tabEps.end(), min);
+    size_t iE;
+    if (it == tabEps.begin())
+      iE = 0;
+    else if (it == tabEps.end())
+      iE = tabEps.size() - 1;
+    else
+      iE = it - tabEps.begin();
+    double h = random.rand() * (1-tabCDF[iE]) + tabCDF[iE];
+    it = std::upper_bound(tabCDF.begin(), tabCDF.end(), h);
+    if (it == tabCDF.begin())
+      eps = tabEps.front();
+    else if (it == tabCDF.end())
+      eps = tabEps.back();
+    else
+      eps =  tabEps[it - tabCDF.begin()];
+
+//    size_t j = random.randBin(tabCDF); // draw random bin
+//    double binWidth = (tabEps[j+1] - tabEps[j]);
+//    double eps = (tabEps[j] + random.rand() * binWidth); // draw random uniform background photon energy in bin
     eps /= (1 + z); // dN/dE(Ep,Ee,z) = (1+z)^4 * dN/dE(Ep*(1+z),Ee*(1+z),0)  TODO: check if scaling needed 
 
-    Epp = 5.7e-1 * pow(eps/eV, -0.56) * pow(E/eV, 0.44) * eV;
+    Epp = 5.7e-1 * pow(eps/mec2, -0.56) * pow(E/mec2, 0.44) * mec2;
     
     candidate->addSecondary(11, Epp / (1+z));
     candidate->addSecondary(-11, Epp / (1+z));
-    if (std::isfinite(Epp) == false)
-      std::cout << "EMTripletPairProduction: " <<  Epp/eV << " " << E/eV << " " << tabE[0]/eV << " " << tabE[tabE.size() -1]/eV << " " << eps/eV << " " << i << " " << std::endl;
-    if (Epp /eV > E/eV)
-      std::cout << "EMTriplet: " << Epp / eV << " " << E / eV << std::endl; 
+//    if (Epp > 1e19 *eV && E <= 1e19*eV)
+//      std::cout << Epp / eV << " " << eps / eV << " " << E / eV << " " << j << std::endl;
+//    if (std::isfinite(Epp) == false)
+//      std::cout << "EMTripletPairProduction: " <<  Epp/eV << " " << E/eV << " " << tabE[0]/eV << " " << tabE[tabE.size() -1]/eV << " " << eps/eV << " " << i << " " << std::endl;
+//    if (Epp /eV > E/eV)
+//      std::cout << "EMTriplet: " << Epp / eV << " " << E / eV << std::endl; 
   }
   candidate->current.setEnergy((E - 2.*Epp)/(1+z));
 }

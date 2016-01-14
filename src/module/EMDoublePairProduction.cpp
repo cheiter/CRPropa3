@@ -100,7 +100,6 @@ void EMDoublePairProduction::performInteraction(Candidate *candidate) const {
     candidate->addSecondary(11, Ee);
     candidate->addSecondary(-11, Ee);
   }
-  candidate->current.setEnergy(100*EeV);
   candidate->setActive(false);
 }
 
