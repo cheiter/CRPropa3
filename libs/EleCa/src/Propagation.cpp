@@ -61,7 +61,7 @@ void Propagation::InitBkgArray(const std::string &BackRad) {
 	BkgE.resize(POINTS_VERY_FEW);
 	BkgA.resize(POINTS_VERY_FEW);
 
-	if (BackRad == "CMB") {
+	if (BackRad == "CMB" || BackRad == "CMB_PP" || BackRad == "CMB_DPP" || BackRad == "CMB_ICS" || BackRad == "TPP") {
 		double de = pow((double) eps_ph_sup_cmb / eps_ph_inf_cmb,
 				1. / POINTS_VERY_FEW);
 		double e = eps_ph_inf_cmb;
@@ -72,7 +72,7 @@ void Propagation::InitBkgArray(const std::string &BackRad) {
 		}
 	}
 
-	else if (BackRad == "CIOB") {
+	else if (BackRad == "CIOB" || BackRad == "IRB_PP" || BackRad == "IRB_DPP" || BackRad == "IRB_ICS" || BackRad == "IRB_TPP") {
 		double de = pow((double) eps_ph_sup_ciob / eps_ph_inf_ciob,
 				1. / POINTS_VERY_FEW);
 		double e = eps_ph_inf_ciob;
@@ -83,7 +83,7 @@ void Propagation::InitBkgArray(const std::string &BackRad) {
 		}
 	}
 
-	else if (BackRad == "URB") {
+	else if (BackRad == "URB" || BackRad == "URB_PP" || BackRad == "URB_ICS" || BackRad == "URB_DPP" || BackRad == "URB_TPP") {
 		double de = pow((double) eps_ph_sup_urb / eps_ph_inf_urb,
 				1. / POINTS_VERY_FEW);
 		double e = eps_ph_inf_urb;
@@ -115,6 +115,14 @@ void Propagation::InitBkgArray(const std::string &BackRad) {
 	for (size_t i = 0; i < POINTS_VERY_FEW; i++) {
 		BkgA[i] *= a;
 	}
+//  std::string bla = "/home/home1/institut_3a/heiter/Desktop/cdf_table_EleCa_";
+//  bla += BackRad.c_str();
+//  bla += ".txt";
+//	std::ofstream output(bla.c_str());
+//	output << "# eps [eV]\tcdf_normalized\n";
+//  for (size_t i = 0; i < POINTS_VERY_FEW; i++)
+//    output << BkgE[i] << "\t" << BkgA[i] << "\n";
+//  output.close();
 }
 
 double Propagation::GetMeanThetaBFDeflection(double Bin, double Ein, int ptype,
@@ -358,7 +366,7 @@ std::vector<double> Propagation::GetEtarget(Process &proc,
 	  proc.SetLimits();
 	  smintmp = proc.GetMin();
 	  Eexp = proc.feps_inf;
-          Etarget_tmp = ShootPhotonEnergyMC(Eexp, z_curr);	  
+    Etarget_tmp = ShootPhotonEnergyMC(Eexp, z_curr);	  
 	  
 	  Etarget.push_back(Etarget_tmp);
 	  
@@ -482,7 +490,8 @@ void Propagation::Propagate(Particle &curr_particle,
 	proc.SetIncidentParticle(curr_particle);
 	proc.SetBackground(Bkg);
 	
-	double Ethr2 = std::max(fEthr, std::max(ElectronMass,ElectronMass*ElectronMass/proc.feps_sup));
+//	double Ethr2 = std::max(fEthr, std::max(ElectronMass,ElectronMass*ElectronMass/proc.feps_sup));
+  double Ethr2 = fEthr;  //geändert für vergleich EleCa <-> CRPropa, da für URB Ethr2 = 3.03 *10**17 und nicht 10**17 wie eingestellt.
 	if (Ecurr < Ethr2)
 	{
 		if (!dropParticlesBelowEnergyThreshold)
@@ -520,10 +529,31 @@ void Propagation::Propagate(Particle &curr_particle,
 
 		stepsize = realpath * corrB_factor;
 		dz = Mpc2z(stepsize);
+//		dz = lightTravelDistance2Redshift(stepsize*Mpc);
+
+//    if (curr_particle.GetType() == 11 || curr_particle.GetType() == -11){ // ##
+//    if (curr_particle.GetType() == 22){ // ##
+//      Ecurr = EnergyLoss1D(Ecurr, zpos, 0., BNorm);
+//      curr_particle.Setz(z_curr);
+//      curr_particle.SetEnergy(Ecurr);
+//      if (Ecurr <= Ethr2)
+//      {
+//        if (!dropParticlesBelowEnergyThreshold)
+//        {
+//          ParticleAtGround.push_back(curr_particle);
+//        }
+//        return;
+//      }
+//      ParticleAtGround.push_back(curr_particle);
+//      return;
+//    }
+//    if (dz < 0)
+//      std::cout << "hat nicht geklappt" << std::endl;
 
 
 		if ((walkdone + realpath) > min_dist) {
 			interacted = 1;
+      //curr_particle.SetDeflection(sqrt(curr_particle.GetDeflection()**2 + GetMeanThetaBFDeflection(BNorm,(Ein + curr_particle.GetEnergy())/2., curr_particle.GetType(), walkdone + realpath)**2));
 		}
 
 		if (zpos - dz <= 0) {
@@ -550,6 +580,7 @@ void Propagation::Propagate(Particle &curr_particle,
 		if (z_curr <= 0) 
 		{
 			ParticleAtGround.push_back(curr_particle);
+      //curr_particle.SetDeflection(sqrt(curr_particle.GetDeflection()**2 + GetMeanThetaBFDeflection(BNorm,(Ein + curr_particle.GetEnergy())/2., curr_particle.GetType(), walkdone + realpath)**2));
 			return;
 		}
 		if (Ecurr <= Ethr2) 
@@ -589,7 +620,7 @@ void Propagation::Propagate(Particle &curr_particle,
 			return;
 		} //if PP
 		else if (proc.GetName() == Process::DPP) {
-		  E1 = (Ecurr - 2 * ElectronMass) / 2.0;
+		  E1 = (Ecurr - 2 * ElectronMass) / 2.0;  //4 electron masses
 			if (E1 == 0)
 				std::cerr << "ERROR in DPP process E : " << E1 << std::endl;
 
