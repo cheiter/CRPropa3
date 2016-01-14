@@ -289,7 +289,7 @@ class PPSecondariesEnergyDistribution
 				
 				double x0 = log((1.-beta) / 2.);
 				double dx = ( log((1. + beta)/2) -  log((1.-beta) / 2.)) / (Nrer); 
-				_data[i * Nrer] = exp(x0) ; 
+				_data[i * Nrer] = exp(x0) ;
 				for (size_t j = 1; j < Nrer; j++)
 				{
 					double x = exp(x0 + j*dx); 
@@ -588,7 +588,7 @@ double ExtractTPPSecondariesEnergy(Process &proc) {
 
 	double E0 = proc.GetIncidentParticle().GetEnergy();
 	double eps = proc.GetTargetParticle().GetEnergy();
-	double Epp = 5.7e-1 * pow(eps, -0.56) * pow(E0, 0.44);
+	double Epp = 5.7e-1 * pow(eps/ElectronMass, -0.56) * pow(E0/ElectronMass, 0.44) * ElectronMass;
 	double s = proc.GetCMEnergy();
 	double Epp2 = E0
 			* (1 - 1.768 * pow(s / ElectronMass / ElectronMass, -3.0 / 4.0))
