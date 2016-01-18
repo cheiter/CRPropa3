@@ -14,6 +14,11 @@ class Propagation {
 
 private:
 
+  bool havePP;
+  bool haveICS;
+  bool haveDPP;
+  bool haveTPP;
+
 	double vPPle[1101];
 	double vDPPle[1101];
 	double vTPPle[1101];
@@ -61,6 +66,18 @@ public:
 	{
 		magneticFieldStrength = B;
 	}
+  void SetHavePP(bool _havePP){
+    havePP = _havePP;
+  }
+  void SetHaveICS(bool _haveICS){
+    haveICS = _haveICS;
+  }
+  void SetHaveDPP(bool _haveDPP){
+    haveDPP = _haveDPP;
+  }
+  void SetHaveTPP(bool _haveTPP){
+    haveTPP = _haveTPP;
+  }
 };
 
 } // namespace eleca
