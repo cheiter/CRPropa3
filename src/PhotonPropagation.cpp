@@ -28,7 +28,11 @@ void EleCaPropagation(const std::string &inputfile,
 	bool showProgress,
 	double lowerEnergyThreshold,
 	double magneticFieldStrength,
-	const std::string &background) {
+	const std::string &background,
+  bool havePP,
+  bool haveICS,
+  bool haveDPP,
+  bool haveTPP) {
 
 	std::ifstream infile(inputfile.c_str());
 	std::streampos startPosition = infile.tellg();
@@ -49,6 +53,10 @@ void EleCaPropagation(const std::string &inputfile,
 
 	eleca::setSeed();
 	eleca::Propagation propagation;
+  propagation.SetHavePP(havePP);
+  propagation.SetHaveICS(haveICS);
+  propagation.SetHaveDPP(haveDPP);
+  propagation.SetHaveTPP(haveTPP);
   propagation.SetEthr(lowerEnergyThreshold / eV );
   propagation.ReadTables(getDataPath("EleCa/eleca.dat"));
 
