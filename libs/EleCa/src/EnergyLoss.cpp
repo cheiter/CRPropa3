@@ -125,6 +125,23 @@ void InitRK() {
 
 double EnergyLoss1D(double Energy, double z0, double zfin, double B) {
 
+  if (B == 0){ //to make CRPropa redshift for B = 0 performance tests
+    double H0 = 67.3 * 1000 * M2MPC; // default values
+    double omegaM = 0.315;
+    double omegaL = 1 - omegaM;
+    double hubbleRate = H0 * sqrt(omegaL + omegaM * pow(1 + z0, 3));
+    //check if z = 0
+    if (z0 <= DBL_EPSILON)
+      return Energy;
+    // use small step approximation:  dz = H(z) / c * ds
+    double dz = hubbleRate / C_speed * z2Mpc(z0-zfin)/M2MPC;
+    // prevent dz > z
+    dz = std::min(dz, z0);
+    // adiabatic energy loss: dE / dz = E / (1 + z)
+    Energy = Energy * (1 - dz / (1 + z0));
+    return Energy;
+  }
+
 	double zStep = 2.5e-5;
 
 #pragma omp critical
@@ -289,7 +306,7 @@ class PPSecondariesEnergyDistribution
 				
 				double x0 = log((1.-beta) / 2.);
 				double dx = ( log((1. + beta)/2) -  log((1.-beta) / 2.)) / (Nrer); 
-				_data[i * Nrer] = exp(x0) ;
+				_data[i * Nrer] = exp(x0) ; //richtig ??? sollte anders sein oder ? (*fehlender Vorfaktor) 
 				for (size_t j = 1; j < Nrer; j++)
 				{
 					double x = exp(x0 + j*dx); 
@@ -568,7 +585,7 @@ double ExtractTPPSecondariesEnergy(Particle &pi, Particle &pt) {
 	double eps = pt.GetEnergy();
 	double s = 2 * E0 * eps * (1 - pi.GetBeta() * cos(M_PI))
 			+ pi.GetMass() * pi.GetMass();
-	double Epp = 5.7e-1 * pow(eps, -0.56) * pow(E0, 0.44);
+	double Epp = 5.7e-1 * pow(eps / ElectronMass, -0.56) * pow(E0 / ElectronMass, 0.44) * ElectronMass;
 	double Epp2 = E0
 			* (1 - 1.768 * pow(s / ElectronMass / ElectronMass, -3.0 / 4.0))
 			/ 2.0;
