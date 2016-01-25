@@ -3,10 +3,10 @@
 
 #include <stdio.h>
 #include <stdexcept>
+#include <kiss/string.h>
 
 #ifdef CRPROPA_HAVE_ZLIB
 #include <ozstream.hpp>
-#include <kiss/string.h>
 #endif
 
 namespace crpropa {
@@ -78,10 +78,12 @@ TextOutput::TextOutput(const std::string &filename,
 
 void TextOutput::setEnergyScale(double scale) {
 	energyScale = scale;
+	printHeader();
 }
 
 void TextOutput::setLengthScale(double scale) {
 	lengthScale = scale;
+	printHeader();
 }
 
 void TextOutput::set1D(bool value) {
@@ -288,14 +290,14 @@ std::string TextOutput::getDescription() const {
 	return "TextOutput";
 }
 
-
 void TextOutput::endRun() {
 #ifdef CRPROPA_HAVE_ZLIB
 	zstream::ogzstream *zs = dynamic_cast<zstream::ogzstream *>(out);
 	if (zs) {
 		zs->close();
 	}
-#endif    
+#endif
+	outfile.flush();
 }
 
 TextOutput::~TextOutput() {
