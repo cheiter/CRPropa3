@@ -646,6 +646,17 @@ void Propagation::Propagate(Particle &curr_particle,
 		if (walkdone > min_dist) {
 			interacted = 1;
       //curr_particle.SetDeflection(sqrt(curr_particle.GetDeflection()**2 + GetMeanThetaBFDeflection(BNorm,(Ein + curr_particle.GetEnergy())/2., curr_particle.GetType(), walkdone + realpath)**2));
+      if (Ecurr <= Ethr2) 
+      { 
+        if (!dropParticlesBelowEnergyThreshold)
+        {
+          ParticleAtGround.push_back(curr_particle);
+        }
+        return;
+      }
+      proc.SetIncidentParticle(curr_particle);
+      proc.SetCMEnergy();
+      proc.SetLimits();
       break; 
 		}
 				
