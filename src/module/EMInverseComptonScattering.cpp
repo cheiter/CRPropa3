@@ -278,10 +278,10 @@ void EMInverseComptonScattering::performInteraction(Candidate *candidate) const 
     // choose bin of s where cdf(s) = cdf_rand -> s_rand
     double mec2 = mass_electron * c_squared;
     Random &random = Random::instance();
-    double Eps = 0.;
-    double min = 1. * mec2 * mec2 / 4. / E; // eig 1
+    double eps = 0.;
+    double epsMin = 1. * mec2 * mec2 / 4. / E; // Minimum neccessary eps to have sufficient value of Mandelstam s for interaction process
     std::vector<double>::const_iterator it;
-    it = std::lower_bound(tabEps.begin(), tabEps.end(), min);
+    it = std::lower_bound(tabEps.begin(), tabEps.end(), epsMin);
     size_t iE;
     if (it == tabEps.begin())
       iE = 0;
@@ -292,21 +292,24 @@ void EMInverseComptonScattering::performInteraction(Candidate *candidate) const 
     double h = random.rand() * (1-tabCDF[iE]) + tabCDF[iE];
     it = std::upper_bound(tabCDF.begin(), tabCDF.end(), h);
     if (it == tabCDF.begin())
-      Eps = tabEps.front();
+      eps = tabEps.front();
     else if (it == tabCDF.end())
-      Eps = tabEps.back();
+      eps = tabEps.back();
     else
-      Eps =  tabEps[it - tabCDF.begin()];
+      eps =  tabEps[it - tabCDF.begin()];
     double binWidth = (tabEps[it-tabCDF.begin()+1] - tabEps[it-tabCDF.begin()]);
-    Eps += random.rand() * binWidth; // draw random Eps uniformly distributed in bin
+    eps += random.rand() * binWidth; // draw random eps uniformly distributed in bin
 
 //    Random &random = Random::instance();
 //    size_t j = random.randBin(tabCDF); // draw random bin
 //    double binWidth = (tabEps[j+1] - tabEps[j]);
-//    double Eps = tabEps[j] + random.rand() * binWidth; // draw random s uniformly distributed in bin
-    Eps /= (1.+z);
-    double s = 4.*E*Eps + (mass_electron*c_squared)*(mass_electron*c_squared);
+//    double eps = tabEps[j] + random.rand() * binWidth; // draw random s uniformly distributed in bin
+    if (eps < epsMin)  //TODO: Abbruchbedingung interaction kann nciht stattfinden mit diesem eps, vor oder nach scaling + ist das ok oder muss anderes eps gewählt werden ??
+      return;
+    eps /= (1.+z);
+    double s = 4.*E*eps + (mass_electron*c_squared)*(mass_electron*c_squared);
 
+//    s = 4.*E*1e-3 * eV;
     Epost = __extractICSSecondaries(E,s); 
     candidate->addSecondary(22, (E-Epost)/(1+z));
 //    if (std::isfinite(Epost) == false)

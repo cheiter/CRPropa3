@@ -99,6 +99,7 @@ void EMDoublePairProduction::performInteraction(Candidate *candidate) const {
     double Ee = (E-2.*mass_electron*c_squared)/2.; // Use assumption of Lee 96 (i.e., all the energy goes equaly shared between only 1 couple of e+e- but take mass of second e+e- pair into account. In DPPpaper has been shown that this approximation is valid within -1.5%
     candidate->addSecondary(11, Ee);
     candidate->addSecondary(-11, Ee);
+    //TODO: put something here that rejects events with to low eps -> smin for interaction comp PP, ICS, TPP
   }
   candidate->setActive(false);
 }

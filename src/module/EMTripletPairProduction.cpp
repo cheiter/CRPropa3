@@ -196,9 +196,9 @@ void EMTripletPairProduction::performInteraction(Candidate *candidate) const {
     double mec2 = mass_electron * c_squared;
     Random &random = Random::instance();
     double eps = 0.;
-    double min = 8. * mec2 * mec2 / 4. / E; // eig 9
+    double epsMin = 8. * mec2 * mec2 / 4. / E; // eig 9 // Minimum neccessary eps to have sufficent value of Mandelstam s for interaction process
     std::vector<double>::const_iterator it;
-    it = std::lower_bound(tabEps.begin(), tabEps.end(), min);
+    it = std::lower_bound(tabEps.begin(), tabEps.end(), epsMin);
     size_t iE;
     if (it == tabEps.begin())
       iE = 0;
@@ -218,6 +218,9 @@ void EMTripletPairProduction::performInteraction(Candidate *candidate) const {
 //    size_t j = random.randBin(tabCDF); // draw random bin
 //    double binWidth = (tabEps[j+1] - tabEps[j]);
 //    double eps = (tabEps[j] + random.rand() * binWidth); // draw random uniform background photon energy in bin
+//    double eps = tabEps[j] + random.rand() * binWidth; // draw random s uniformly distributed in bin
+    if (eps < epsMin)  //TODO: Abbruchbedingung interaction kann nciht stattfinden mit diesem eps, vor oder nach scaling + ist das ok oder muss anderes eps gewählt werden ??
+      return;
     eps /= (1 + z); // dN/dE(Ep,Ee,z) = (1+z)^4 * dN/dE(Ep*(1+z),Ee*(1+z),0)  TODO: check if scaling needed 
 
     Epp = 5.7e-1 * pow(eps/mec2, -0.56) * pow(E/mec2, 0.44) * mec2;
