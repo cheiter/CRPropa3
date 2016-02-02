@@ -3,6 +3,7 @@
 
 #include "crpropa/Module.h"
 #include "crpropa/PhotonBackground.h"
+#include <fstream>
 
 namespace crpropa {
 
@@ -27,6 +28,7 @@ private:
 	bool havePhotons;
   std::vector<double> tabEps;
   std::vector<double> tabCDF;
+  mutable std::ofstream out;
 
 public:
 	EMInverseComptonScattering(PhotonField photonField = CMB, bool havePhotons =

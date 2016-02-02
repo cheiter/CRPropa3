@@ -3,6 +3,7 @@
 
 #include "crpropa/Module.h"
 #include "crpropa/PhotonBackground.h"
+#include <fstream>
 
 namespace crpropa {
 
@@ -22,6 +23,7 @@ private:
 	std::vector<double> tabPhotonEnergy; /*< tabulated photon energy in [J] */
 	double limit; ///< fraction of energy loss length to limit the next step
 	bool haveElectrons;
+  mutable std::ofstream out;
 
 public:
 	EMDoublePairProduction(PhotonField photonField = CMB, bool haveElectrons =

@@ -19,6 +19,7 @@ Propagation::Propagation() {
   haveICS = true;
   haveDPP = true;
   haveTPP = true;
+  interactionVeto.clear();
 	fEthr = 1e16;
 }
 
@@ -163,18 +164,16 @@ double Propagation::ExtractMinDist(Process &proc, int type, double R, double R2,
 		pt.SetEnergy(Etarget[0]);
 		proc1.SetTargetParticle(pt);
 		proc1.SetCMEnergy();
-
-		tmp_lambda1 = GetLambdaTab(proc1, Process::PP);
-
-		min_dist1 = -tmp_lambda1 * log(R);
+    tmp_lambda1 = GetLambdaTab(proc1, Process::PP);
+    min_dist1 = -tmp_lambda1 * log(R);
 	  }
 	  if (Etarget[1]) {
 		pt.SetEnergy(Etarget[1]);
 		proc2.SetTargetParticle(pt);
 		proc2.SetCMEnergy();
-		tmp_lambda2 = GetLambdaTab(proc2, Process::DPP);
-		min_dist2 = -tmp_lambda2 * log(R2);
-	  }
+    tmp_lambda2 = GetLambdaTab(proc2, Process::DPP);
+    min_dist2 = -tmp_lambda2 * log(R2);
+    }
 #ifdef DEBUG_ELECA
 		std::cerr << "comparing 2 mindists: " << min_dist1 << "("
 		<< tmp_lambda1 << ") vs " << min_dist2 << " ( "
@@ -205,8 +204,11 @@ double Propagation::ExtractMinDist(Process &proc, int type, double R, double R2,
       pt.SetEnergy(Etarget[1]);
       proc.SetTargetParticle(pt);
       proc.SetCMEnergy();
-    } else
-      min_dist1 = -1.;
+    } else {
+      interactionVeto[0] = true;
+      interactionVeto[1] = true;
+//      min_dist1 = -1.;
+    }
   }    //end if type 0
 	else if (abs(type) == 11) {
 
@@ -252,8 +254,11 @@ double Propagation::ExtractMinDist(Process &proc, int type, double R, double R2,
       pt.SetEnergy(Etarget[1]);
       proc.SetTargetParticle(pt);
       proc.SetCMEnergy();
-    } else
-      min_dist1 = -1.;
+    } else {
+      interactionVeto[0] = true;
+      interactionVeto[1] = true;
+//      min_dist1 = -1.;
+    }
 	}    //else e+/e-
 	else
 		std::cerr << "something wrong in particle type ( " << type
@@ -350,15 +355,15 @@ double Propagation::ShootPhotonEnergyMC(double Emin, double z) const {
 	if (it == BkgA.begin())
 		return BkgE.front();
 	else if (it == BkgA.end())
-		return BkgE.back();
+		return BkgE.back(); 
 	else
 		return BkgE[it - BkgA.begin()];
-
 }
 
 std::vector<double> Propagation::GetEtarget(Process &proc,
 		const Particle &particle) const {
 
+  interactionVeto.clear();
 	std::vector<double> Etarget;
 	double Etarget_tmp = 0;
 	double smintmp = 0;
@@ -379,6 +384,10 @@ std::vector<double> Propagation::GetEtarget(Process &proc,
 	  else
 	    Etarget_tmp = ShootPhotonEnergyMC(Eexp, z_curr);
     Etarget.push_back(Etarget_tmp);
+    if (Eexp == 0 || Etarget_tmp < ElectronMass*ElectronMass/Energy)
+      interactionVeto.push_back(true);
+    else
+      interactionVeto.push_back(false);
     
 		proc.SetName(Process::DPP);
 	  proc.SetLimits();
@@ -391,7 +400,10 @@ std::vector<double> Propagation::GetEtarget(Process &proc,
 	  else
 	    Etarget_tmp = ShootPhotonEnergyMC(Eexp, z_curr);	  
     Etarget.push_back(Etarget_tmp);
-    
+    if (Eexp == 0 || Etarget_tmp < 2.0*ElectronMass*ElectronMass/Energy)
+      interactionVeto.push_back(true);
+    else
+      interactionVeto.push_back(false);
 	}
 
 	else if (abs(pType) == 11) {
@@ -411,19 +423,27 @@ std::vector<double> Propagation::GetEtarget(Process &proc,
 //    Etarget_tmp = ShootPhotonEnergyMC(Eexp, z_curr);	  
 //	  
 //	  Etarget.push_back(Etarget_tmp);
+    if (Eexp == 0 || Etarget_tmp < 0.25*ElectronMass*ElectronMass/Energy)
+      interactionVeto.push_back(true);
+    else
+      interactionVeto.push_back(false);
 	  
 		proc.SetName(Process::TPP);
 	  proc.SetLimits();
 	  smintmp = proc.GetMin();
-	  Eexp = std::max(proc.feps_inf,2*ElectronMass*ElectronMass/Energy);
+	  Eexp = std::max(proc.feps_inf,2.0*ElectronMass*ElectronMass/Energy); //eig 3.6
 	  if (Eexp > proc.feps_sup) {
 //	    std::cout << proc.GetName() << "  " <<  Eexp << " too big wrt " << proc.feps_sup << " , " << proc.feps_inf << " .. it should not interact!" << std::endl;
 	    Eexp = 0; 
 	    Etarget.push_back(0);}
 	  else
 	    Etarget_tmp = ShootPhotonEnergyMC(Eexp, z_curr);	  
-      
     Etarget.push_back(Etarget_tmp);
+
+    if (Eexp == 0 || Etarget_tmp < 2.0*ElectronMass*ElectronMass/Energy)
+      interactionVeto.push_back(true);
+    else
+      interactionVeto.push_back(false);
 	}    //end e/e
 	else
 		std::cerr << "something wrong in particle type ( " << pType
@@ -435,6 +455,10 @@ std::vector<double> Propagation::GetEtarget(Process &proc,
 		exit(0);
 	}
 
+	if (interactionVeto.size() != 2) {
+		std::cout << "something wrong with the interaction veto!! " << std::endl;
+		exit(0);
+	}
 	return Etarget;
 }
 
@@ -499,6 +523,7 @@ void Propagation::WriteOutput(std::ostream &out, Particle &p1,
 void Propagation::Propagate(Particle &curr_particle,
 		std::vector<Particle> &ParticleAtMatrix,
 		std::vector<Particle> &ParticleAtGround,
+    std::vector<double> &data,
 		bool dropParticlesBelowEnergyThreshold
 		) const {
 
@@ -544,6 +569,7 @@ void Propagation::Propagate(Particle &curr_particle,
 		
 
 	std::vector<double> EtargetAll = GetEtarget(proc, curr_particle);
+  
 
 	min_dist = ExtractMinDist(proc, curr_particle.GetType(), R, R2, EtargetAll);
 
@@ -555,8 +581,8 @@ void Propagation::Propagate(Particle &curr_particle,
 	double realpath = 0;
 
 	double min_dist_last = min_dist;
-
-  if (min_dist < 0.){
+//  if (min_dist < 0.){
+  if (((proc.GetName() == Process::PP || proc.GetName() == Process::ICS) && interactionVeto[0]) || ((proc.GetName() == Process::DPP || proc.GetName() == Process::TPP) && interactionVeto[1])){
     min_dist = z2Mpc(zin);
     while (z_curr > 0){
       theta_deflBF = 0;
@@ -621,7 +647,6 @@ void Propagation::Propagate(Particle &curr_particle,
 
 		stepsize = realpath * corrB_factor;
 		dz = Mpc2z(stepsize);
-//		dz = lightTravelDistance2Redshift(stepsize*Mpc);
 
 		if (zpos - dz <= 0) {
 			dz = zpos;
@@ -645,7 +670,6 @@ void Propagation::Propagate(Particle &curr_particle,
 
 		if (walkdone > min_dist) {
 			interacted = 1;
-      //curr_particle.SetDeflection(sqrt(curr_particle.GetDeflection()**2 + GetMeanThetaBFDeflection(BNorm,(Ein + curr_particle.GetEnergy())/2., curr_particle.GetType(), walkdone + realpath)**2));
       if (Ecurr <= Ethr2) 
       { 
         if (!dropParticlesBelowEnergyThreshold)
@@ -663,7 +687,6 @@ void Propagation::Propagate(Particle &curr_particle,
 		if (z_curr <= 0) 
 		{
 			ParticleAtGround.push_back(curr_particle);
-      //curr_particle.SetDeflection(sqrt(curr_particle.GetDeflection()**2 + GetMeanThetaBFDeflection(BNorm,(Ein + curr_particle.GetEnergy())/2., curr_particle.GetType(), walkdone + realpath)**2));
 			return;
 		}
 		if (Ecurr <= Ethr2) 
@@ -692,6 +715,7 @@ void Propagation::Propagate(Particle &curr_particle,
 						<< " " << std::endl;
 
 			Particle pp(11, E1, z_curr,curr_particle.Generation()+1);
+      data.push_back(E1);
 			pp.SetWeigth(wi_last);
       pp.SetDeflection(curr_particle.GetDeflection());
 			ParticleAtMatrix.push_back(pp);
@@ -708,6 +732,7 @@ void Propagation::Propagate(Particle &curr_particle,
 				std::cerr << "ERROR in DPP process E : " << E1 << std::endl;
 
 			Particle pp(11, E1, z_curr,curr_particle.Generation()+1);
+      data.push_back(E1);
 			pp.SetWeigth(wi_last);
       pp.SetDeflection(curr_particle.GetDeflection());
 			ParticleAtMatrix.push_back(pp);
@@ -728,6 +753,8 @@ void Propagation::Propagate(Particle &curr_particle,
 						<< std::endl;
 
 			Particle pp(curr_particle.GetType(), E1, z_curr,curr_particle.Generation()+1);
+      if (curr_particle.GetType() == 11 )
+        data.push_back(E1);
 			pp.SetWeigth(wi_last);
       pp.SetDeflection(curr_particle.GetDeflection());
 			ParticleAtMatrix.push_back(pp);
@@ -746,6 +773,7 @@ void Propagation::Propagate(Particle &curr_particle,
 						<< std::endl;
 
 			Particle pp(11, E1, z_curr,curr_particle.Generation()+1);
+      data.push_back(E1);
 			pp.SetWeigth(wi_last);
       pp.SetDeflection(curr_particle.GetDeflection());
 			ParticleAtMatrix.push_back(pp);
@@ -756,6 +784,10 @@ void Propagation::Propagate(Particle &curr_particle,
 			ParticleAtMatrix.push_back(pe);
 			
 			Particle psc(curr_particle.GetType(), E3, z_curr,curr_particle.Generation()+1);
+//      if (E3 < 0.)
+//        std::cout << E3 << std::endl;
+      if (curr_particle.GetType() == 11)
+        data.push_back(E3);
 			psc.SetWeigth(wi_last);
       psc.SetDeflection(curr_particle.GetDeflection());
 			ParticleAtMatrix.push_back(psc);

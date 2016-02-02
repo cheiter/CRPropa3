@@ -15,6 +15,7 @@ EMDoublePairProduction::EMDoublePairProduction(PhotonField photonField,
 	setPhotonField(photonField);
 	this->haveElectrons = haveElectrons;
 	this->limit = limit;
+  out.open("/home/home1/institut_3a/heiter/Desktop/Energy_Secondary_Electrons_Photons_Directly_After_Interaction/data/CRPropa_DPP_electron.txt");
 }
 
 void EMDoublePairProduction::setPhotonField(PhotonField photonField) {
@@ -99,6 +100,7 @@ void EMDoublePairProduction::performInteraction(Candidate *candidate) const {
     double Ee = (E-2.*mass_electron*c_squared)/2.; // Use assumption of Lee 96 (i.e., all the energy goes equaly shared between only 1 couple of e+e- but take mass of second e+e- pair into account. In DPPpaper has been shown that this approximation is valid within -1.5%
     candidate->addSecondary(11, Ee);
     candidate->addSecondary(-11, Ee);
+    out << Ee / eV << "\n";
     //TODO: put something here that rejects events with to low eps -> smin for interaction comp PP, ICS, TPP
   }
   candidate->setActive(false);
@@ -129,9 +131,9 @@ void EMDoublePairProduction::process(Candidate *candidate) const {
   double rate = scaling * interpolate(E, tabPhotonEnergy, tabInteractionRate);
   randDistance = -log(random.rand()) / rate;
 
+  candidate->limitNextStep(limit / rate);
   // check if interaction does not happen
   if (step < randDistance) {
-    candidate->limitNextStep(limit / rate);
     return;
   }
 

@@ -484,6 +484,7 @@ double __extractICSSecondaries(double Ee, double s, double theta)
 {
 
 	static ICSSecondariesEnergyDistribution interpolation;
+//	return interpolation.sample(Ee, 4.*Ee*1e-3);
 	return interpolation.sample(Ee, s);
 
 	//double beta = (s - ElectronMass * ElectronMass)
@@ -605,6 +606,9 @@ double ExtractTPPSecondariesEnergy(Process &proc) {
 
 	double E0 = proc.GetIncidentParticle().GetEnergy();
 	double eps = proc.GetTargetParticle().GetEnergy();
+//  if (eps < std::max(proc.feps_inf,2*ElectronMass*ElectronMass/E0))
+//    std::cout << std::max(proc.feps_inf,2*ElectronMass*ElectronMass/E0) << " " << eps << std::endl;
+//  eps = 1e-3;
 	double Epp = 5.7e-1 * pow(eps/ElectronMass, -0.56) * pow(E0/ElectronMass, 0.44) * ElectronMass;
 	double s = proc.GetCMEnergy();
 	double Epp2 = E0

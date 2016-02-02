@@ -15,6 +15,7 @@ EMPairProduction::EMPairProduction(PhotonField photonField,
 	setPhotonField(photonField);
 	this->haveElectrons = haveElectrons;
 	this->limit = limit;
+  out.open("/home/home1/institut_3a/heiter/Desktop/Energy_Secondary_Electrons_Photons_Directly_After_Interaction/data/CRPropa_PP_electron.txt");
 }
 
 void EMPairProduction::setPhotonField(PhotonField photonField) {
@@ -233,17 +234,17 @@ class PPSecondariesEnergyDistribution
 					double beta = sqrt(1. - 4.* ElectronMass * ElectronMass / s);
 
 					double x0 = log((1.-beta) / 2.);
-					double dx = ( log((1. + beta)/2) -  log((1.-beta) / 2.)) / (_Nrer); 
-					if (random.rand() < 0.5)
+          double dx = ( log((1. + beta)/2) -  log((1.-beta) / 2.)) / (_Nrer); 
+          if (random.rand() < 0.5)
             return exp(x0 + (i)*dx) * E0;
-					else
-						return E0 * (1-exp(x0 + (i)*dx) );
-				}
-			}
-			std::cerr << "PPSecondariesEnergyDistribution out of bounds!" << std::endl;
-			std::cerr << "  s0[0] = " << s0[0] << "  s0[_Nrer-1] = " << s0[_Nrer-1] << "  rnd = " << rnd << std::endl;
-			throw std::runtime_error("Grave logic error in PPSecondariesEnergyDistribution!");
-		}
+          else
+            return E0 * (1-exp(x0 + (i)*dx) );
+        }
+      }
+      std::cerr << "PPSecondariesEnergyDistribution out of bounds!" << std::endl;
+      std::cerr << "  s0[0] = " << s0[0] << "  s0[_Nrer-1] = " << s0[_Nrer-1] << "  rnd = " << rnd << std::endl;
+      throw std::runtime_error("Grave logic error in PPSecondariesEnergyDistribution!");
+    }
 };
 
 // Helper function for actual Monte Carlo sampling to avoid code-duplication
@@ -258,7 +259,7 @@ void EMPairProduction::performInteraction(Candidate *candidate) const {
   if (haveElectrons){
     int id = candidate->current.getId();
     double z = candidate->getRedshift();
-    double E = candidate->current.getEnergy() *(1+z);
+    double E = candidate->current.getEnergy();
     double Epos = 0.;
     
 //    // interpolate between tabulated electron energies to get corresponding cdf
@@ -312,12 +313,13 @@ void EMPairProduction::performInteraction(Candidate *candidate) const {
 //    double Eps = tabEps[j] + random.rand() * binWidth; // draw random s uniformly distributed in bin
     if (eps < epsMin)  //TODO: Abbruchbedingung interaction kann nciht stattfinden mit diesem eps, vor oder nach scaling + ist das ok oder muss anderes eps gewählt werden ??
       return;
-    eps /= (1.+z);
+    eps *= (1+z);
 //    eps = 1e-3*eV;
     Epos =  __extractPPSecondariesEnergy(E,4.*eps*E);
+    out << Epos/eV << "\n";
     
-    candidate->addSecondary(-11, (E-Epos)/(1+z));
-    candidate->addSecondary(11, Epos/(1+z));
+    candidate->addSecondary(-11, (E-Epos));
+    candidate->addSecondary(11, Epos);
   }
   candidate->setActive(false);
 }
@@ -347,9 +349,9 @@ void EMPairProduction::process(Candidate *candidate) const {
   double rate = scaling * interpolate(E, tabPhotonEnergy, tabInteractionRate);
   randDistance = -log(random.rand()) / rate;
   
+  candidate->limitNextStep(limit / rate);
   // check if interaction does not happen
   if (step < randDistance) {
-    candidate->limitNextStep(limit / rate);
     return;
   }
 

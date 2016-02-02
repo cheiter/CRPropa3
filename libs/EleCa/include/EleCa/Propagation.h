@@ -18,6 +18,7 @@ private:
   bool haveICS;
   bool haveDPP;
   bool haveTPP;
+  mutable std::vector<bool> interactionVeto;
 
 	double vPPle[1101];
 	double vDPPle[1101];
@@ -55,6 +56,7 @@ public:
 	void Propagate(Particle &curr_particle,
 			std::vector<Particle> &ParticleAtMatrix,
 			std::vector<Particle> &ParticleAtGround,
+      std::vector<double> &data,
 			bool dropParticlesBelowEnergyThreshold = true) const;
 	double ExtractPhotonEnergyMC(double z, Process &proc) const;
 	double ShootPhotonEnergyMC(double z) const;

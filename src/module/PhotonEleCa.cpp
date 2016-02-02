@@ -41,7 +41,8 @@ void PhotonEleCa::process(Candidate *candidate) const {
 		ParticleAtMatrix.pop_back();
 
 		if (p1.IsGood()) {
-			propagation->Propagate(p1, ParticleAtMatrix, ParticleAtGround);
+      std::vector<double> d;
+			propagation->Propagate(p1, ParticleAtMatrix, ParticleAtGround, d);
 		}
 	}
 
