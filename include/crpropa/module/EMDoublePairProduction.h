@@ -23,6 +23,8 @@ private:
 	std::vector<double> tabPhotonEnergy; /*< tabulated photon energy in [J] */
 	double limit; ///< fraction of energy loss length to limit the next step
 	bool haveElectrons;
+  std::vector<double> tabEps;
+  std::vector<double> tabCDF;
   mutable std::ofstream out;
 
 public:
@@ -34,6 +36,7 @@ public:
 	void setLimit(double limit);
 
 	void initRate(std::string filename);
+  void initEleCaStuff(std::string filename);
 	void process(Candidate *candidate) const;
   void performInteraction(Candidate *candidate) const;
 

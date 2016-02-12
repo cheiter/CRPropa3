@@ -15,7 +15,7 @@ EMInverseComptonScattering::EMInverseComptonScattering(PhotonField photonField,
 	setPhotonField(photonField);
 	this->havePhotons = havePhotons;
 	this->limit = limit;
-  out.open("/home/home1/institut_3a/heiter/Desktop/Energy_Secondary_Electrons_Photons_Directly_After_Interaction/data/CRPropa_ICS_electron.txt");
+//  out.open("/home/home1/institut_3a/heiter/Desktop/Energy_Secondary_Electrons_Photons_Directly_After_Interaction/data/CRPropa_ICS_electron.txt");
 }
 
 void EMInverseComptonScattering::setPhotonField(PhotonField photonField) {
@@ -69,6 +69,12 @@ void EMInverseComptonScattering::setPhotonField(PhotonField photonField) {
 		initRate(getDataPath("EMInverseComptonScattering_URB_Protheroe96.txt"));
 		initCumulativeRate(getDataPath("EMInverseComptonScattering_CDF_URB_Protheroe96.txt"));
     initEleCaStuff(getDataPath("cdf_table_EleCa_URB.txt"));
+		break;
+	case All:
+		setDescription("EMInverseComptonScattering: All (CMB + IRB Stecker05 + URB Protheroe96)");
+		initRate(getDataPath("EMInverseComptonScattering_All.txt"));
+		initCumulativeRate(getDataPath("EMInverseComptonScattering_CDF_URB_Protheroe96.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
 		break;
 	default:
 		throw std::runtime_error(
@@ -255,68 +261,69 @@ void EMInverseComptonScattering::performInteraction(Candidate *candidate) const 
   double z = candidate->getRedshift();
   double E = candidate->current.getEnergy();
   double Epost = 0.;
+  double mec2 = mass_electron * c_squared;
 
-  //    // interpolate between tabulated electron energies to get corresponding cdf
-  //    size_t i = std::upper_bound(tabE.begin(), tabE.end(), E) - tabE.begin() - 500; 
-  //    double a = (E - tabE[i]) / (tabE[i + 500] - tabE[i]);
-  //
-  //    std::vector<double> cdf(500);
-  //    for (size_t j = 0; j < 500; j++)
-  //      cdf[j] = tabCumulativeRate[i+j] + a * (tabCumulativeRate[i+500+j] - tabCumulativeRate[i+j]);
-  //
-  //    // draw random value between 0. and maximum of corresponding cdf
-  //    // choose bin of s where cdf(s) = cdf_rand -> s_rand
-  //    Random &random = Random::instance();
-  //    size_t j = random.randBin(cdf); // draw random bin
-  //    double binWidth = (tabs[i+j+1] - tabs[i+j]);
-  //    double s_kin = tabs[i+j] + random.rand() * binWidth; // draw random s uniformly distributed in bin
-  //    double s = s_kin + (mass_electron*c_squared)*(mass_electron*c_squared);
-  //    s /= (1 + z) * (1 + z); // dN/dE(Ep,Ee,z) = (1+z)^4 * dN/dE(Ep*(1+z),Ee*(1+z),0) TODO: check if scaling needed
+  // interpolate between tabulated electron energies to get corresponding cdf
+  size_t i = std::upper_bound(tabE.begin(), tabE.end(), E) - tabE.begin() - 500; 
+  double a = (E - tabE[i]) / (tabE[i + 500] - tabE[i]);
+  if (E > tabE.back() || E < tabE.front())
+    return;
 
-  //EleCa method: 
+  std::vector<double> cdf(500);
+  for (size_t j = 0; j < 500; j++)
+    cdf[j] = tabCumulativeRate[i+j] + a * (tabCumulativeRate[i+500+j] - tabCumulativeRate[i+j]);
+
   // draw random value between 0. and maximum of corresponding cdf
   // choose bin of s where cdf(s) = cdf_rand -> s_rand
-  double mec2 = mass_electron * c_squared;
   Random &random = Random::instance();
-  double eps = 0.;
-  double epsMin = 1. * mec2 * mec2 / 4. / E; // Minimum neccessary eps to have sufficient value of Mandelstam s for interaction process
-  std::vector<double>::const_iterator it;
-  it = std::lower_bound(tabEps.begin(), tabEps.end(), epsMin);
-  size_t iE;
-  if (it == tabEps.begin())
-    iE = 0;
-  else if (it == tabEps.end())
-    iE = tabEps.size() - 1;
-  else
-    iE = it - tabEps.begin();
-  double h = random.rand() * (1-tabCDF[iE]) + tabCDF[iE];
-  it = std::upper_bound(tabCDF.begin(), tabCDF.end(), h);
-  if (it == tabCDF.begin())
-    eps = tabEps.front();
-  else if (it == tabCDF.end())
-    eps = tabEps.back();
-  else
-    eps =  tabEps[it - tabCDF.begin()];
-  double binWidth = (tabEps[it-tabCDF.begin()+1] - tabEps[it-tabCDF.begin()]);
-  eps += random.rand() * binWidth; // draw random eps uniformly distributed in bin
+  size_t j = random.randBin(cdf); // draw random bin
+  double binWidth = (tabs[i+j+1] - tabs[i+j]);
+  double s_kin = tabs[i+j] + random.rand() * binWidth; // draw random s uniformly distributed in bin
+  double s = s_kin + (mass_electron*c_squared)*(mass_electron*c_squared);
+  s *= (1 + z); // TODO: check if scaling needed
 
-  //    Random &random = Random::instance();
-  //    size_t j = random.randBin(tabCDF); // draw random bin
-  //    double binWidth = (tabEps[j+1] - tabEps[j]);
-  //    double eps = tabEps[j] + random.rand() * binWidth; // draw random s uniformly distributed in bin
-  if (eps < epsMin)  //TODO: Abbruchbedingung interaction kann nciht stattfinden mit diesem eps, vor oder nach scaling + ist das ok oder muss anderes eps gewählt werden ??
-    return;
-  eps *= (1.+z);
-  double s = 4.*E*eps + (mass_electron*c_squared)*(mass_electron*c_squared);
+//  //EleCa method: 
+//  // draw random value between 0. and maximum of corresponding cdf
+//  // choose bin of s where cdf(s) = cdf_rand -> s_rand
+//  Random &random = Random::instance();
+//  double eps = 0.;
+//  double epsMin = tabEps[0];
+//  std::vector<double>::const_iterator it;
+//  it = std::lower_bound(tabEps.begin(), tabEps.end(), epsMin);
+//  size_t iE;
+//  if (it == tabEps.begin())
+//    iE = 0;
+//  else if (it == tabEps.end())
+//    iE = tabEps.size() - 1;
+//  else
+//    iE = it - tabEps.begin();
+//  double h = random.rand() * (1-tabCDF[iE]) + tabCDF[iE];
+//  it = std::upper_bound(tabCDF.begin(), tabCDF.end(), h);
+//  if (it == tabCDF.begin())
+//    eps = tabEps.front();
+//  else if (it == tabCDF.end())
+//    eps = tabEps.back();
+//  else
+//    eps =  tabEps[it - tabCDF.begin()];
+//  double binWidth = (tabEps[it-tabCDF.begin()+1] - tabEps[it-tabCDF.begin()]);
+////  eps += random.rand() * binWidth; // draw random eps uniformly distributed in bin
+//
+//  std::cout << eps / eV << std::endl;
+//
+//  //    Random &random = Random::instance();
+//  //    size_t j = random.randBin(tabCDF); // draw random bin
+//  //    double binWidth = (tabEps[j+1] - tabEps[j]);
+//  //    double eps = tabEps[j] + random.rand() * binWidth; // draw random s uniformly distributed in bin
+//  eps *= (1.+z);
+//  double s = 4.*E*eps + (mass_electron*c_squared)*(mass_electron*c_squared);
 
-//  s = 4.*E*1e-3 * eV;
+//  std::cout << s/4./E / eV<< std::endl;
+
   Epost = __extractICSSecondaries(E,s); 
-  if (id ==11)
-    out << Epost / eV << "\n";
+//  if (id ==11)
+//    out << Epost / eV << "\n";
   if (havePhotons)
     candidate->addSecondary(22, (E-Epost));
-  //    if (std::isfinite(Epost) == false)
-  //      std::cout << "EMInverseComptonScattering: " << Epost/eV << " " << E/eV << " " << tabE[0]/eV << " " << tabE[tabE.size() -1]/eV << " " << s << " " << i << " " << std::endl;
   candidate->current.setEnergy(Epost); 
 }
 

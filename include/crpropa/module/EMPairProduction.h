@@ -22,7 +22,7 @@ private:
 	std::vector<double> tabInteractionRate; /*< tabulated interaction rate in [1/m] */
 	std::vector<double> tabPhotonEnergy; /*< tabulated photon energy in [J] */
 	std::vector<double> tabCumulativeRate; /*< tabulated cumulative interaction rate in [1/m] */
-	std::vector<double> tabE; /*< tabulated photon energy in [J], 141 steps from 10^16 - 10^23 eV, other stepsize than in tabPhotonEnergy */
+	std::vector<double> tabE; /*< tabulated photon energy in [J], 111 steps from 10^12 - 10^23 eV, other stepsize than in tabPhotonEnergy */
 	std::vector<double> tabs; /*< tabulated Mandelstam s in [J**2], 500 steps */
 	double limit; ///< fraction of energy loss length to limit the next step
 	bool haveElectrons;

@@ -15,7 +15,7 @@ EMPairProduction::EMPairProduction(PhotonField photonField,
 	setPhotonField(photonField);
 	this->haveElectrons = haveElectrons;
 	this->limit = limit;
-  out.open("/home/home1/institut_3a/heiter/Desktop/Energy_Secondary_Electrons_Photons_Directly_After_Interaction/data/CRPropa_PP_electron.txt");
+//  out.open("/home/home1/institut_3a/heiter/Desktop/Energy_Secondary_Electrons_Photons_Directly_After_Interaction/data/CRPropa_PP_electron.txt");
 }
 
 void EMPairProduction::setPhotonField(PhotonField photonField) {
@@ -69,6 +69,12 @@ void EMPairProduction::setPhotonField(PhotonField photonField) {
 		initRate(getDataPath("EMPairProduction_URB_Protheroe96.txt"));
 		initCumulativeRate(getDataPath("EMPairProduction_CDF_URB_Protheroe96.txt"));
     initEleCaStuff(getDataPath("cdf_table_EleCa_URB.txt"));
+		break;
+	case All:
+		setDescription("EMPairProduction: All (CMB + IRB Stecker05 + URB Protheroe96)");
+		initRate(getDataPath("EMPairProduction_All.txt"));
+		initCumulativeRate(getDataPath("EMPairProduction_CDF_URB_Protheroe96.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
 		break;
 	default:
 		throw std::runtime_error(
@@ -261,62 +267,68 @@ void EMPairProduction::performInteraction(Candidate *candidate) const {
     double z = candidate->getRedshift();
     double E = candidate->current.getEnergy();
     double Epos = 0.;
+    double mec2 = mass_electron * c_squared;
     
-//    // interpolate between tabulated electron energies to get corresponding cdf
-//    size_t i = std::upper_bound(tabE.begin(), tabE.end(), E) - tabE.begin() - 500; 
-//    double a = (E - tabE[i]) / (tabE[i + 500] - tabE[i]);
-//
-//    std::vector<double> cdf(500);
-//    for (size_t j = 0; j < 500; j++)
-//      cdf[j] = tabCumulativeRate[i+j] + a * (tabCumulativeRate[i+500+j] - tabCumulativeRate[i+j]);
-//
+    // interpolate between tabulated electron energies to get corresponding cdf
+    size_t i = std::upper_bound(tabE.begin(), tabE.end(), E) - tabE.begin() - 500; 
+    double a = (E - tabE[i]) / (tabE[i + 500] - tabE[i]);
+    if (E < tabE.front() || E > tabE.back())
+      return;
+
+    std::vector<double> cdf(500);
+    for (size_t j = 0; j < 500; j++)
+      cdf[j] = tabCumulativeRate[i+j] + a * (tabCumulativeRate[i+500+j] - tabCumulativeRate[i+j]);
+
+    // draw random value between 0. and maximum of corresponding cdf
+    // choose bin of s where cdf(s) = cdf_rand -> s_rand
+    Random &random = Random::instance();
+    size_t j = random.randBin(cdf); // draw random bin
+    double binWidth = (tabs[i+j+1] - tabs[i+j]);
+    double s_kin = tabs[i+j] + random.rand() * binWidth; // draw random s uniformly distributed in bin
+    s_kin *(1 + z); // TODO: check if scaling needed 
+    if (s_kin < 4*mec2*mec2)
+      std::cout << "ERROR" << std::endl;
+//    std::cout << s_kin/4/E / eV << std::endl;
+    Epos = __extractPPSecondariesEnergy(E,s_kin);
+    
+//    // EleCa method:
 //    // draw random value between 0. and maximum of corresponding cdf
 //    // choose bin of s where cdf(s) = cdf_rand -> s_rand
 //    Random &random = Random::instance();
-//    size_t j = random.randBin(cdf); // draw random bin
-//    double binWidth = (tabs[i+j+1] - tabs[i+j]);
-//    double s_kin = tabs[i+j] + random.rand() * binWidth; // draw random s uniformly distributed in bin
-//    s_kin /= (1 + z)*(1 + z); // dN/dE(Ep,Ee,z) = (1+z)^4 * dN/dE(Ep*(1+z),Ee*(1+z),0)  TODO: check if scaling needed 
-//    Epos = __extractPPSecondariesEnergy(E,s_kin);
-    
-    // EleCa method:
-    // draw random value between 0. and maximum of corresponding cdf
-    // choose bin of s where cdf(s) = cdf_rand -> s_rand
-    double mec2 = mass_electron * c_squared;
-    Random &random = Random::instance();
-    double eps = 0.;
-    double epsMin = 4. * mec2 * mec2 / 4. / E; // Minimum neccessary eps to have sufficient value of Mandelstam s for interaction process
-    std::vector<double>::const_iterator it;
-    it = std::lower_bound(tabEps.begin(), tabEps.end(), epsMin);
-    size_t iE;
-    if (it == tabEps.begin())
-      iE = 0;
-    else if (it == tabEps.end())
-      iE = tabEps.size() - 1;
-    else
-      iE = it - tabEps.begin();
-    double h = random.rand() * (1-tabCDF[iE]) + tabCDF[iE];
-    it = std::upper_bound(tabCDF.begin(), tabCDF.end(), h);
-    if (it == tabCDF.begin())
-      eps = tabEps.front();
-    else if (it == tabCDF.end())
-      eps = tabEps.back();
-    else
-      eps =  tabEps[it - tabCDF.begin()];
-    double binWidth = (tabEps[it-tabCDF.begin()+1] - tabEps[it-tabCDF.begin()]);
-    eps += random.rand() * binWidth; // draw random eps uniformly distributed in bin
-
-//    Random &random = Random::instance();
-//    size_t j = random.randBin(tabCDF); // draw random bin
-//    double binWidth = (tabEps[j+1] - tabEps[j]);
-//    double eps = tabEps[j] + random.rand() * binWidth; // draw random eps uniformly distributed in bin
-//    double Eps = tabEps[j] + random.rand() * binWidth; // draw random s uniformly distributed in bin
-    if (eps < epsMin)  //TODO: Abbruchbedingung interaction kann nciht stattfinden mit diesem eps, vor oder nach scaling + ist das ok oder muss anderes eps gewählt werden ??
-      return;
-    eps *= (1+z);
-//    eps = 1e-3*eV;
-    Epos =  __extractPPSecondariesEnergy(E,4.*eps*E);
-    out << Epos/eV << "\n";
+//    double eps = 0.;
+//    double epsMin = 4. * mec2 * mec2 / 4. / E; // Minimum neccessary eps to have sufficient value of Mandelstam s for interaction process
+//    std::vector<double>::const_iterator it;
+//    it = std::lower_bound(tabEps.begin(), tabEps.end(), epsMin);
+//    size_t iE;
+//    if (it == tabEps.begin())
+//      iE = 0;
+//    else if (it == tabEps.end())
+//      iE = tabEps.size() - 1;
+//    else
+//      iE = it - tabEps.begin();
+//    double h = random.rand() * (1-tabCDF[iE]) + tabCDF[iE];
+//    it = std::upper_bound(tabCDF.begin(), tabCDF.end(), h);
+//    if (it == tabCDF.begin())
+//      eps = tabEps.front();
+//    else if (it == tabCDF.end())
+//      eps = tabEps.back();
+//    else
+//      eps =  tabEps[it - tabCDF.begin()];
+//    double binWidth = (tabEps[it-tabCDF.begin()+1] - tabEps[it-tabCDF.begin()]);
+////    eps += random.rand() * binWidth; // draw random eps uniformly distributed in bin
+//
+////    Random &random = Random::instance();
+////    size_t j = random.randBin(tabCDF); // draw random bin
+////    double binWidth = (tabEps[j+1] - tabEps[j]);
+////    double eps = tabEps[j] + random.rand() * binWidth; // draw random eps uniformly distributed in bin
+////    double Eps = tabEps[j] + random.rand() * binWidth; // draw random s uniformly distributed in bin
+//    if (eps < epsMin)  //TODO: Abbruchbedingung interaction kann nciht stattfinden mit diesem eps, vor oder nach scaling + ist das ok oder muss anderes eps gewählt werden ??
+//      return;
+//
+//    std::cout << eps / eV << std::endl;
+//    eps *= (1+z);
+//    Epos =  __extractPPSecondariesEnergy(E,4.*eps*E);
+////    out << (Epos)/eV << "\n";
     
     candidate->addSecondary(-11, (E-Epos));
     candidate->addSecondary(11, Epos);

@@ -15,7 +15,7 @@ EMTripletPairProduction::EMTripletPairProduction(PhotonField photonField,
 	setPhotonField(photonField);
 	this->haveElectrons = haveElectrons;
 	this->limit = limit;
-  out.open("/home/home1/institut_3a/heiter/Desktop/Energy_Secondary_Electrons_Photons_Directly_After_Interaction/data/CRPropa_TPP_electron.txt");
+//  out.open("/home/home1/institut_3a/heiter/Desktop/Energy_Secondary_Electrons_Photons_Directly_After_Interaction/data/CRPropa_TPP_electron.txt");
 }
 
 void EMTripletPairProduction::setPhotonField(PhotonField photonField) {
@@ -69,6 +69,12 @@ void EMTripletPairProduction::setPhotonField(PhotonField photonField) {
 		initRate(getDataPath("EMTripletPairProduction_URB_Protheroe96.txt"));
 		initCumulativeRate(getDataPath("EMTripletPairProduction_CDF_URB_Protheroe96.txt"));
     initEleCaStuff(getDataPath("cdf_table_EleCa_URB.txt"));
+		break;
+	case All:
+		setDescription("EMTripletPairProduction: All (CMB + IRB Stecker05 + URB Protheroe96)");
+		initRate(getDataPath("EMTripletPairProduction_All.txt"));
+		initCumulativeRate(getDataPath("EMTripletPairProduction_CDF_URB_Protheroe96.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
 		break;
 	default:
 		throw std::runtime_error(
@@ -173,73 +179,72 @@ void EMTripletPairProduction::performInteraction(Candidate *candidate) const {
   double z = candidate->getRedshift();
   double E = candidate->current.getEnergy();
   double Epp = 0.;
+  double mec2 = mass_electron * c_squared;
 
-  //    // interpolate between tabulated electron energies to get corresponding cdf
-  //    size_t i = std::upper_bound(tabE.begin(), tabE.end(), E) - tabE.begin() - 500; 
-  //    double a = (E - tabE[i]) / (tabE[i + 500] - tabE[i]);
-  //
-  //    std::vector<double> cdf(500);
-  //    for (size_t j = 0; j < 500; j++)
-  //      cdf[j] = tabCumulativeRate[i+j] + a * (tabCumulativeRate[i+500+j] - tabCumulativeRate[i+j]);
-  //
-  //    // draw random value between 0. and maximum of corresponding cdf
-  //    // choose bin of eps where cdf(eps) = cdf_rand -> eps_rand
-  //    Random &random = Random::instance();
-  //    size_t j = random.randBin(cdf); // draw random bin
-  //    double binWidth = (tabs[i+j+1] - tabs[i+j]);
-  //    double eps = (tabs[i+j] + random.rand() * binWidth)/4./E; // draw random uniform background photon energy in bin, note that one needs to convert tablulated eps back to s_kin and calculate right eps with real electron energy
+  // interpolate between tabulated electron energies to get corresponding cdf
+  size_t i = std::upper_bound(tabE.begin(), tabE.end(), E) - tabE.begin() - 500; 
+  double a = (E - tabE[i]) / (tabE[i + 500] - tabE[i]);
+  if (E < tabE.front() || E > tabE.back())
+    return;
 
+  std::vector<double> cdf(500);
+  for (size_t j = 0; j < 500; j++)
+    cdf[j] = tabCumulativeRate[i+j] + a * (tabCumulativeRate[i+500+j] - tabCumulativeRate[i+j]);
 
-  // EleCa method:
   // draw random value between 0. and maximum of corresponding cdf
   // choose bin of eps where cdf(eps) = cdf_rand -> eps_rand
-  double mec2 = mass_electron * c_squared;
   Random &random = Random::instance();
-  double eps = 0.;
-  double epsMin = 8. * mec2 * mec2 / 4. / E; // eig 9 // Minimum neccessary eps to have sufficent value of Mandelstam s for interaction process
-  std::vector<double>::const_iterator it;
-  it = std::lower_bound(tabEps.begin(), tabEps.end(), epsMin);
-  size_t iE;
-  if (it == tabEps.begin())
-    iE = 0;
-  else if (it == tabEps.end())
-    iE = tabEps.size() - 1;
-  else
-    iE = it - tabEps.begin();
-  double h = random.rand() * (1-tabCDF[iE]) + tabCDF[iE];
-  it = std::upper_bound(tabCDF.begin(), tabCDF.end(), h);
-  if (it == tabCDF.begin())
-    eps = tabEps.front();
-  else if (it == tabCDF.end())
-    eps = tabEps.back();
-  else
-    eps =  tabEps[it - tabCDF.begin()];
+  size_t j = random.randBin(cdf); // draw random bin
+  double binWidth = (tabs[i+j+1] - tabs[i+j]);
+  double eps = (tabs[i+j] + random.rand() * binWidth)/4./E; // draw random uniform background photon energy in bin, note that one needs to convert tablulated eps back to s_kin and calculate right eps with real electron energy
+  if (4*E*eps < 8*mec2*mec2)
+    std::cout << "ERROR" << std::endl;
 
-  //    size_t j = random.randBin(tabCDF); // draw random bin
-  //    double binWidth = (tabEps[j+1] - tabEps[j]);
-  //    double eps = (tabEps[j] + random.rand() * binWidth); // draw random uniform background photon energy in bin
-  //    double eps = tabEps[j] + random.rand() * binWidth; // draw random s uniformly distributed in bin
-  if (eps < epsMin)  //TODO: Abbruchbedingung interaction kann nciht stattfinden mit diesem eps, vor oder nach scaling + ist das ok oder muss anderes eps gewählt werden ??
-    return;
+
+//  // EleCa method:
+//  // draw random value between 0. and maximum of corresponding cdf
+//  // choose bin of eps where cdf(eps) = cdf_rand -> eps_rand
+//  Random &random = Random::instance();
+//  double eps = 0.;
+//  double epsMin = 8. * mec2 * mec2 / 4. / E; // Minimum neccessary eps to have sufficent value of Mandelstam s for interaction process
+//  std::vector<double>::const_iterator it;
+//  it = std::lower_bound(tabEps.begin(), tabEps.end(), epsMin);
+//  size_t iE;
+//  if (it == tabEps.begin())
+//    iE = 0;
+//  else if (it == tabEps.end())
+//    iE = tabEps.size() - 1;
+//  else
+//    iE = it - tabEps.begin();
+//  double h = random.rand() * (1-tabCDF[iE]) + tabCDF[iE];
+//  it = std::upper_bound(tabCDF.begin(), tabCDF.end(), h);
+//  if (it == tabCDF.begin())
+//    eps = tabEps.front();
+//  else if (it == tabCDF.end())
+//    eps = tabEps.back();
+//  else
+//    eps =  tabEps[it - tabCDF.begin()];
+//
+//  //    size_t j = random.randBin(tabCDF); // draw random bin
+//  //    double binWidth = (tabEps[j+1] - tabEps[j]);
+//  //    double eps = (tabEps[j] + random.rand() * binWidth); // draw random uniform background photon energy in bin
+//  //    double eps = tabEps[j] + random.rand() * binWidth; // draw random s uniformly distributed in bin
+//  if (eps < epsMin)  //TODO: Abbruchbedingung interaction kann nciht stattfinden mit diesem eps, vor oder nach scaling + ist das ok oder muss anderes eps gewählt werden ??
+//    return;
+
+//  std::cout << eps / eV << std::endl;
   eps *= (1 + z);
-//  eps = 1e-3 * eV;
 
   Epp = 5.7e-1 * pow(eps/mec2, -0.56) * pow(E/mec2, 0.44) * mec2;
-  out << Epp / eV << "\n";
+//  out << Epp / eV << "\n";
 
   if (haveElectrons){
     candidate->addSecondary(11, Epp);
     candidate->addSecondary(-11, Epp);
-    //    if (Epp > 1e19 *eV && E <= 1e19*eV)
-    //      std::cout << Epp / eV << " " << eps / eV << " " << E / eV << " " << j << std::endl;
-    //    if (std::isfinite(Epp) == false)
-    //      std::cout << "EMTripletPairProduction: " <<  Epp/eV << " " << E/eV << " " << tabE[0]/eV << " " << tabE[tabE.size() -1]/eV << " " << eps/eV << " " << i << " " << std::endl;
-    //    if (Epp /eV > E/eV)
-    //      std::cout << "EMTriplet: " << Epp / eV << " " << E / eV << std::endl; 
   }
   candidate->current.setEnergy((E - 2.*Epp));
-  if (id == 11)
-    out << (E - 2.*Epp) / eV<< "\n" ;
+//  if (id == 11)
+//    out << (E - 2.*Epp) / eV<< "\n" ;
 }
 
 void EMTripletPairProduction::process(Candidate *candidate) const {

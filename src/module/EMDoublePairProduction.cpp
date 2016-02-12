@@ -15,7 +15,7 @@ EMDoublePairProduction::EMDoublePairProduction(PhotonField photonField,
 	setPhotonField(photonField);
 	this->haveElectrons = haveElectrons;
 	this->limit = limit;
-  out.open("/home/home1/institut_3a/heiter/Desktop/Energy_Secondary_Electrons_Photons_Directly_After_Interaction/data/CRPropa_DPP_electron.txt");
+//  out.open("/home/home1/institut_3a/heiter/Desktop/Energy_Secondary_Electrons_Photons_Directly_After_Interaction/data/CRPropa_DPP_electron.txt");
 }
 
 void EMDoublePairProduction::setPhotonField(PhotonField photonField) {
@@ -24,35 +24,48 @@ void EMDoublePairProduction::setPhotonField(PhotonField photonField) {
 	case CMB:
 		setDescription("EMDoublePairProduction: CMB");
 		initRate(getDataPath("EMDoublePairProduction_CMB.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_CMB.txt"));
 		break;
 	case IRB:  // default: Kneiske '04 IRB model
 	case IRB_Kneiske04:
 		setDescription("EMDoublePairProduction: IRB (Kneiske 2004)");
 		initRate(getDataPath("EMDoublePairProduction_IRB_Kneiske04.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
 		break;
 	case IRB_Stecker05:
 		setDescription("EMDoublePairProduction: IRB (Stecker 2005)");
 		initRate(getDataPath("EMDoublePairProduction_IRB_Stecker05.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
 		break;
 	case IRB_Franceschini08:
 		setDescription("EMDoublePairProduction: IRB (Franceschini 2008)");
 		initRate(getDataPath("EMDoublePairProduction_IRB_Franceschini08.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
 		break;
 	case IRB_Finke10:
 		setDescription("EMDoublePairProduction: IRB (Finke 2010)");
 		initRate(getDataPath("EMDoublePairProduction_IRB_Finke10.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
 		break;
 	case IRB_Dominguez11:
 		setDescription("EMDoublePairProduction: IRB (Dominguez 2011)");
 		initRate(getDataPath("EMDoublePairProduction_IRB_Dominguez11.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
 		break;
 	case IRB_Gilmore12:
 		setDescription("EMDoublePairProduction: IRB (Gilmore 2012)");
 		initRate(getDataPath("EMDoublePairProduction_IRB_Gilmore12.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
 		break;
 	case URB_Protheroe96:
 		setDescription("EMDoublePairProduction: URB (Protheroe 1996)");
 		initRate(getDataPath("EMDoublePairProduction_URB_Protheroe96.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_URB.txt"));
+		break;
+  case All:
+		setDescription("EMPairDoubleProduction: All (CMB + IRB Stecker05 + URB Protheroe96)");
+		initRate(getDataPath("EMDoublePairProduction_All.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
 		break;
 	default:
 		throw std::runtime_error(
@@ -93,14 +106,71 @@ void EMDoublePairProduction::initRate(std::string filename) {
 	infile.close();
 }
 
+void EMDoublePairProduction::initEleCaStuff(std::string filename) {
+	std::ifstream infile(filename.c_str());
+
+	if (!infile.good())
+		throw std::runtime_error(
+				"EMPairProduction: could not open file " + filename);
+
+	// clear previously loaded interaction rates
+	tabEps.clear();
+  tabCDF.clear();
+
+	while (infile.good()) {
+		if (infile.peek() != '#') {
+			double a, b;
+			infile >> a >> b;
+			if (infile) {
+				tabEps.push_back(a*eV);
+        tabCDF.push_back(b);
+			}
+		}
+		infile.ignore(std::numeric_limits < std::streamsize > ::max(), '\n');
+	}
+	infile.close();
+}
+
 void EMDoublePairProduction::performInteraction(Candidate *candidate) const {
+  double E = candidate->current.getEnergy();
+  double mec2 = mass_electron * c_squared;
+  
+//  Random &random = Random::instance();
+//  double eps = 0.;
+//  double epsMin = 8. * mec2 * mec2 / 4. / E; // Minimum neccessary eps to have sufficient value of Mandelstam s for interaction process
+//  std::vector<double>::const_iterator it;
+//  it = std::lower_bound(tabEps.begin(), tabEps.end(), epsMin);
+//  size_t iE;
+//  if (it == tabEps.begin())
+//    iE = 0;
+//  else if (it == tabEps.end())
+//    iE = tabEps.size() - 1;
+//  else
+//    iE = it - tabEps.begin();
+//  double h = random.rand() * (1-tabCDF[iE]) + tabCDF[iE];
+//  it = std::upper_bound(tabCDF.begin(), tabCDF.end(), h);
+//  if (it == tabCDF.begin())
+//    eps = tabEps.front();
+//  else if (it == tabCDF.end())
+//    eps = tabEps.back();
+//  else
+//    eps =  tabEps[it - tabCDF.begin()];
+//  double binWidth = (tabEps[it-tabCDF.begin()+1] - tabEps[it-tabCDF.begin()]);
+////  eps += random.rand() * binWidth; // draw random eps uniformly distributed in bin
+//
+////    Random &random = Random::instance();
+////    size_t j = random.randBin(tabCDF); // draw random bin
+////    double binWidth = (tabEps[j+1] - tabEps[j]);
+////    double eps = tabEps[j] + random.rand() * binWidth; // draw random eps uniformly distributed in bin
+////    double Eps = tabEps[j] + random.rand() * binWidth; // draw random s uniformly distributed in bin
+//  if (eps < epsMin)  //TODO: Abbruchbedingung interaction kann nciht stattfinden mit diesem eps, vor oder nach scaling + ist das ok oder muss anderes eps gewählt werden ??
+//    return;
 
   if (haveElectrons){
-    double E = candidate->current.getEnergy();
     double Ee = (E-2.*mass_electron*c_squared)/2.; // Use assumption of Lee 96 (i.e., all the energy goes equaly shared between only 1 couple of e+e- but take mass of second e+e- pair into account. In DPPpaper has been shown that this approximation is valid within -1.5%
     candidate->addSecondary(11, Ee);
     candidate->addSecondary(-11, Ee);
-    out << Ee / eV << "\n";
+//    out << Ee / eV << "\n";
     //TODO: put something here that rejects events with to low eps -> smin for interaction comp PP, ICS, TPP
   }
   candidate->setActive(false);
