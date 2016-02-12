@@ -80,8 +80,10 @@ void EleCaPropagation(const std::string &inputfile,
 	output << "# iE          Energy [EeV] of source particle\n";
 	output << "# Generation  number of interactions during propagation before particle is created\n";
 	output << "# defl        deflection [deg] from ideal line\n";
-  std::ofstream out("/home/home1/institut_3a/heiter/Desktop/Energy_Secondary_Electrons_Photons_Directly_After_Interaction/data/EleCa_TPP_electron.txt");
-  out << "#E_sec [eV]\n";
+//  std::ofstream out("/home/home1/institut_3a/heiter/Desktop/Energy_Secondary_Electrons_Photons_Directly_After_Interaction/data/EleCa_TPP_electron.txt");
+//  out << "#E_sec [eV]\n";
+//  std::ofstream out("/home/home1/institut_3a/heiter/Desktop/Eps_Distribution/data/EleCa_eps_TPP.txt");
+//  out << "#eps [eV]\n";
 	while (infile.good()) {
 		if (infile.peek() != '#') {
 			double E, D, pE, iE;
@@ -111,8 +113,8 @@ void EleCaPropagation(const std::string &inputfile,
 								ParticleAtGround, data);
 					}
 				}
-        for (int i = 0; i < data.size(); ++i)
-          out << data[i] << "\n" ;
+//        for (int i = 0; i < data.size(); ++i)
+//          out << data[i] << "\n" ;
 
 				for (int i = 0; i < ParticleAtGround.size(); ++i) {
 					eleca::Particle &p = ParticleAtGround[i];
