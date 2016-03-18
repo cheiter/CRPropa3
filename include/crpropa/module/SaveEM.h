@@ -13,7 +13,7 @@ class SaveEM: public Module {
 private:
 	std::string filename;
 	mutable std::ofstream output;
-  mutable double Ethreshold;
+	mutable double Ethreshold;
 public:
 	SaveEM(const std::string &filename);
 	SaveEM(const std::string &filename, const double Ethr);

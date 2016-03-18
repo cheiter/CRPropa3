@@ -21,7 +21,7 @@ SaveEM::SaveEM(const string &filename) :
 	output << "# iID         Id of source particle\n";
 	output << "# iE          Energy [EeV] of source particle\n";
 	output << "#\n";
-  Ethreshold = 0.1 * EeV;
+	Ethreshold = 0.1 * EeV;
 }
 
 SaveEM::SaveEM(const string &filename, double Ethr) :
@@ -36,7 +36,7 @@ SaveEM::SaveEM(const string &filename, double Ethr) :
 	output << "# iID         Id of source particle\n";
 	output << "# iE          Energy [EeV] of source particle\n";
 	output << "#\n";
-  Ethreshold = Ethr;
+	Ethreshold = Ethr;
 }
 
 SaveEM::~SaveEM() {
@@ -46,8 +46,8 @@ void SaveEM::process(Candidate *candidate) const {
 	int pid = candidate->current.getId();
 	if ((pid != 22) and (abs(pid) != 11))
 		return;
-  if (candidate->isActive()==false || candidate->current.getEnergy() > Ethreshold)
-    return;
+	if (candidate->isActive()==false || candidate->current.getEnergy() > Ethreshold)
+		return;
 
 	char buffer[1024];
 	size_t p = 0;
