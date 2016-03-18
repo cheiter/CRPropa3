@@ -341,7 +341,8 @@ add_library(crpropa SHARED
 	src/module/OutputShell.cpp
 	src/module/OutputROOT.cpp
 	src/module/OutputCRPropa2.cpp
-	src/module/PhotonOutput1D.cpp
+  src/module/PhotonOutput1D.cpp
+  src/module/SaveEM.cpp
 	src/module/PhotonDINT.cpp
 	src/module/PhotonDINT1D.cpp
 	src/module/PhotonEleCa.cpp
