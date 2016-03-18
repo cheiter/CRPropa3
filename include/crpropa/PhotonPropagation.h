@@ -40,6 +40,9 @@ void DintElcaPropagation(const std::string &inputfile,
 	double crossOverEnergy = 0.08010882435,  // in Joule! 5E17 eV = 0.080 J
 	double magneticFieldStrength = 1E-13, double aCutcascade_Magfield = 0);	 // 1 nG
 
+void DintCRPropaPropagation(const std::string &inputfile,
+	const std::string &outputfile, 
+	double magneticFieldStrength = 1E-13, double aCutcascade_Magfield = 0);	 // 1 nG
 } // namespace crpropa
 
 #endif // CRPROPA_PHOTON_PROPAGATION_H
