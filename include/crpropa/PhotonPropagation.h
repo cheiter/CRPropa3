@@ -16,7 +16,11 @@ void EleCaPropagation(const std::string &inputfile,
 		bool showProgress=true,
 		double lowerEnergyThreshold = 0.8010882435, // 5 EeV
 		double magneticFieldStrength = 1E-13,				// 1 nG
-    const std::string &background = "ALL");
+    const std::string &background = "ALL",
+    bool havePP = true,
+    bool haveICS = true,
+    bool haveDPP = true,
+    bool haveTPP = true);
 
 
 /** Use Dint to calculate the observed sprectrum fom the photons recorded in inputfile.
@@ -44,9 +48,6 @@ void DintCRPropaPropagation(const std::string &inputfile,
 	const std::string &outputfile, 
 	double magneticFieldStrength = 1E-13, double aCutcascade_Magfield = 0);	 // 1 nG
 
-void DintCRPropaPropagation2(const std::string &inputfile,
-	const std::string &outputfile, 
-	double magneticFieldStrength = 1E-13, double aCutcascade_Magfield = 0);	 // 1 nG
 } // namespace crpropa
 
 #endif // CRPROPA_PHOTON_PROPAGATION_H
