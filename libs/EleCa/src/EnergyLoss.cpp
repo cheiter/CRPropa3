@@ -125,6 +125,22 @@ void InitRK() {
 
 double EnergyLoss1D(double Energy, double z0, double zfin, double B) {
 
+  if (B == 0){ //to make CRPropa redshift for B = 0 performance tests
+    double H0 = 67.3 * 1000 * M2MPC; // default values
+    double omegaM = 0.315;
+    double omegaL = 1 - omegaM;
+    double hubbleRate = H0 * sqrt(omegaL + omegaM * pow(1 + z0, 3));
+    //check if z = 0
+    if (z0 <= DBL_EPSILON)
+      return Energy;
+    // use small step approximation:  dz = H(z) / c * ds
+    double dz = hubbleRate / C_speed * z2Mpc(z0-zfin)/M2MPC;
+    // prevent dz > z
+    dz = std::min(dz, z0);
+    // adiabatic energy loss: dE / dz = E / (1 + z)
+    Energy = Energy * (1 - dz / (1 + z0));
+    return Energy;
+  }
 	double zStep = 2.5e-5;
 
 #pragma omp critical
