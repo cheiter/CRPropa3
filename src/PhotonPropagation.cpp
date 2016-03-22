@@ -90,7 +90,8 @@ void EleCaPropagation(const std::string &inputfile,
 
 					if (p1.IsGood()) {
 						propagation.Propagate(p1, ParticleAtMatrix,
-								ParticleAtGround,false);
+								ParticleAtGround);
+//								ParticleAtGround,false);
 					}
 				}
 
@@ -632,6 +633,158 @@ void DintCRPropaPropagation(const std::string &inputfile,
 
 }
 
+void DintCRPropaPropagation2(const std::string &inputfile,
+	const std::string &outputfile, 
+	double magneticFieldStrength,
+	double aCutcascade_Magfield) 
+{
+	//////////////////////////////////////////////////////////////////////// 
+	//Initialize EleCa
+	std::ifstream infile(inputfile.c_str());
+	std::streampos startPosition = infile.tellg();
+
+	infile.seekg(0, std::ios::end);
+	infile.seekg(startPosition);
+
+	if (!infile.good())
+		throw std::runtime_error(
+				"CRPropa Dint Propagation: could not open file " + inputfile);
+
+
+	std::vector<eleca::Particle> ParticleAtGround;
+
+	
+	//////////////////////////////////////////////////////////////////////// 
+	//Initialize DINT
+	dCVector energyGrid, energyWidth;
+	// Initialize the energy grids for dint
+	New_dCVector(&energyGrid, NUM_MAIN_BINS);
+	New_dCVector(&energyWidth, NUM_MAIN_BINS);
+	SetEnergyBins(MIN_ENERGY_EXP, &energyGrid, &energyWidth);
+
+	std::ofstream outfile(outputfile.c_str());
+	if (!outfile.good())
+		throw std::runtime_error(
+				"DintPropagation: could not open file " + outputfile);
+
+	Spectrum finalSpectrum;
+	NewSpectrum(&finalSpectrum, NUM_MAIN_BINS);
+	InitializeSpectrum(&finalSpectrum);
+
+	std::string dataPath = getDataPath("dint");
+	double h = H0() * Mpc / 1000;
+	double ol = omegaL();
+	double om = omegaM();
+	DintEMCascade dint(4, 4, dataPath, magneticFieldStrength/gauss, h, om, ol);
+
+	//////////////////////////////////////////////////////////////////////// 
+	// Loop over infile
+
+	while (infile.good()) {
+		/// Eleca Propagation
+		if (infile.peek() == '#')
+		{
+			infile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			continue;
+		}
+	
+		double E, D, pE, iE;
+		int Id, pId, iId;
+		infile >> Id >> E >> D >> pId >> pE >> iId >> iE;
+
+		if (infile)
+		{ // stop at last line
+			double z = eleca::Mpc2z(D); //TODO: use crpropa functions here instead of eleca functions
+			eleca::Particle p0(Id, E * 1e18, z);
+
+			ParticleAtGround.push_back(p0);
+		}
+
+		if (ParticleAtGround.size() > 1000000 || !infile) // The vector is larger
+			//than ~1GB, or the infile is completley read - better call DINT.
+		{
+				const double dMargin = 0.1 * Mpc; 
+				size_t cnt = 0;
+				
+				std::sort(ParticleAtGround.begin(), ParticleAtGround.end(), _ParticlesAtGroundSortPredicate);
+
+				Spectrum inputSpectrum, outputSpectrum;
+				NewSpectrum(&inputSpectrum, NUM_MAIN_BINS);
+				NewSpectrum(&outputSpectrum, NUM_MAIN_BINS);
+
+				InitializeSpectrum(&inputSpectrum);
+				// process secondaries
+				while (ParticleAtGround.size() > 0) 
+				{
+					double currentDistance =  redshift2ComovingDistance(ParticleAtGround.back().Getz()) ;
+					// add secondaries at the current distance to spectrum
+					while ((ParticleAtGround.size() > 0) && (redshift2ComovingDistance(ParticleAtGround.back().Getz()) >= (currentDistance - dMargin))) 
+					{
+						double criticalEnergy = ParticleAtGround.back().GetEnergy() / (ELECTRON_MASS); // units of dint
+						int maxBin = (int) ((log10(criticalEnergy * ELECTRON_MASS)
+								- MAX_ENERGY_EXP) * BINS_PER_DECADE + NUM_MAIN_BINS);
+						if (maxBin >= NUM_MAIN_BINS) {
+							std::cout << "DintPropagation: Energy too high " <<
+								ParticleAtGround.back().GetEnergy() << " eV"  <<
+								std::endl;
+							ParticleAtGround.pop_back();
+							continue;
+						}
+						if (maxBin < 0) {
+							std::cout << "DintPropagation: Energy too low " << 
+								ParticleAtGround.back().GetEnergy() << " eV"  << std::endl;
+							ParticleAtGround.pop_back();
+							continue;
+						}
+						int Id = ParticleAtGround.back().GetType();
+						if (Id == 22)
+							inputSpectrum.spectrum[PHOTON][maxBin] += 1.;
+						else if (Id == 11)
+							inputSpectrum.spectrum[ELECTRON][maxBin] += 1.;
+						else if (Id == -11)
+							inputSpectrum.spectrum[POSITRON][maxBin] += 1.;
+						else {
+							std::cout << "DintPropagation: Unhandled particle ID " << Id
+									<< std::endl;
+						}
+						ParticleAtGround.pop_back();
+					}
+
+					double D = 0;
+					// only propagate to next particle
+					if (ParticleAtGround.size() > 0)
+						D = redshift2ComovingDistance(ParticleAtGround.back().Getz());
+
+					InitializeSpectrum(&outputSpectrum);
+//					SetSpectrum(&inputSpectrum, &outputSpectrum);
+				} // while (secondaries.size() > 0) 
+	
+				AddSpectrum(&finalSpectrum, &inputSpectrum);
+	
+				DeleteSpectrum(&outputSpectrum);
+				DeleteSpectrum(&inputSpectrum);
+		} // dint call
+	}
+
+	infile.close();
+	// output spectrum
+	outfile << "# BinCenter [EeV] BinWidth [EeV] Flux-Weights for photons electrons positrons ... \n";
+	for (int j = 0; j < finalSpectrum.numberOfMainBins; j++) 
+	{
+		outfile << (energyGrid.vector[j] / EeV * (eV * ELECTRON_MASS)) << " ";
+		outfile << (energyWidth.vector[j] / EeV * (eV * ELECTRON_MASS)) << " ";
+		for (int i = 0; i < NUM_SPECIES; i++) {
+			outfile << finalSpectrum.spectrum[i][j] << " ";
+		}
+		outfile << "\n";
+	}
+
+	DeleteSpectrum(&finalSpectrum);
+
+	Delete_dCVector(&energyGrid);
+	Delete_dCVector(&energyWidth);
+
+}
 
 
 
