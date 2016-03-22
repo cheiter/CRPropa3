@@ -539,7 +539,7 @@ void DintCRPropaPropagation(const std::string &inputfile,
 
 		if (infile)
 		{ // stop at last line
-			double z = eleca::Mpc2z(D);
+			double z = comovingDistance2Redshift(D*Mpc);
 			eleca::Particle p0(Id, E * 1e18, z);
 
 			ParticleAtGround.push_back(p0);
@@ -694,7 +694,7 @@ void DintCRPropaPropagation2(const std::string &inputfile,
 
 		if (infile)
 		{ // stop at last line
-			double z = eleca::Mpc2z(D); //TODO: use crpropa functions here instead of eleca functions
+			double z = comovingDistance2Redshift(D*Mpc);
 			eleca::Particle p0(Id, E * 1e18, z);
 
 			ParticleAtGround.push_back(p0);
