@@ -25,42 +25,50 @@ void EMPairProduction::setPhotonField(PhotonField photonField) {
 		setDescription("EMPairProduction: CMB");
 		initRate(getDataPath("EMPairProduction_CMB.txt"));
 		initCumulativeRate(getDataPath("EMPairProduction_CDF_CMB.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_CMB.txt"));
 		break;
 	case IRB:  // default: Kneiske '04 IRB model
 	case IRB_Kneiske04:
 		setDescription("EMPairProduction: IRB (Kneiske 2004)");
 		initRate(getDataPath("EMPairProduction_IRB_Kneiske04.txt"));
 		initCumulativeRate(getDataPath("EMPairProduction_CDF_IRB_Kneiske04.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
 		break;
 	case IRB_Stecker05:
 		setDescription("EMPairProduction: IRB (Stecker 2005)");
 		initRate(getDataPath("EMPairProduction_IRB_Stecker05.txt"));
 		initCumulativeRate(getDataPath("EMPairProduction_CDF_IRB_Stecker05.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
 		break;
 	case IRB_Franceschini08:
 		setDescription("EMPairProduction: IRB (Franceschini 2008)");
 		initRate(getDataPath("EMPairProduction_IRB_Franceschini08.txt"));
 		initCumulativeRate(getDataPath("EMPairProduction_CDF_IRB_Franceschini08.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
 		break;
 	case IRB_Finke10:
 		setDescription("EMPairProduction: IRB (Finke 2010)");
 		initRate(getDataPath("EMPairProduction_IRB_Finke10.txt"));
 		initCumulativeRate(getDataPath("EMPairProduction_CDF_IRB_Finke10.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
 		break;
 	case IRB_Dominguez11:
 		setDescription("EMPairProduction: IRB (Dominguez 2011)");
 		initRate(getDataPath("EMPairProduction_IRB_Dominguez11.txt"));
 		initCumulativeRate(getDataPath("EMPairProduction_CDF_IRB_Dominguez11.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
 		break;
 	case IRB_Gilmore12:
 		setDescription("EMPairProduction: IRB (Gilmore 2012)");
 		initRate(getDataPath("EMPairProduction_IRB_Gilmore12.txt"));
 		initCumulativeRate(getDataPath("EMPairProduction_CDF_IRB_Gilmore12.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
 		break;
 	case URB_Protheroe96:
 		setDescription("EMPairProduction: URB (Protheroe 1996)");
 		initRate(getDataPath("EMPairProduction_URB_Protheroe96.txt"));
 		initCumulativeRate(getDataPath("EMPairProduction_CDF_URB_Protheroe96.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_URB.txt"));
 		break;
 	default:
 		throw std::runtime_error(
@@ -128,6 +136,30 @@ void EMPairProduction::initCumulativeRate(std::string filename) {
 	infile.close();
 }
 
+void EMPairProduction::initEleCaStuff(std::string filename) {
+	std::ifstream infile(filename.c_str());
+
+	if (!infile.good())
+		throw std::runtime_error(
+				"EMPairProduction: could not open file " + filename);
+
+	// clear previously loaded interaction rates
+	tabEps.clear();
+  tabCDF.clear();
+
+	while (infile.good()) {
+		if (infile.peek() != '#') {
+			double a, b;
+			infile >> a >> b;
+			if (infile) {
+				tabEps.push_back(a*eV);
+        tabCDF.push_back(b);
+			}
+		}
+		infile.ignore(std::numeric_limits < std::streamsize > ::max(), '\n');
+	}
+	infile.close();
+}
 ///	 Differential cross-section for pair production for x = Epositron/Egamma
 double dSigmadE_PPx(double x, double beta) {
 	const double A = (x / (1. - x) + (1. - x) / x );
@@ -147,7 +179,7 @@ class PPSecondariesEnergyDistribution
 		double _dls;
 
 	public:
-		PPSecondariesEnergyDistribution(double s_min = 4. * mass_electron*c_squared * mass_electron*c_squared, double s_max =1e23,
+		PPSecondariesEnergyDistribution(double s_min = 4. * mass_electron*c_squared * mass_electron*c_squared, double s_max =1e23*eV*eV,
 				size_t Ns = 1000, size_t Nrer = 1000 )
 		{
 			if (s_min < 4.*mass_electron*c_squared * mass_electron*c_squared)
@@ -170,11 +202,11 @@ class PPSecondariesEnergyDistribution
 				
 				double x0 = log((1.-beta) / 2.);
 				double dx = ( log((1. + beta)/2) -  log((1.-beta) / 2.)) / (Nrer); 
-				_data[i *Nrer] = 0;
+				_data[i *Nrer] = dSigmadE_PPx(exp(x0),beta);
 				for (size_t j = 1; j < Nrer; j++)
 				{
 					double x = exp(x0 + j*dx); 
-					_data[i * Nrer + j] =	dSigmadE_PPx(x, beta) + _data[i*Nrer +j-1]; //TODO: tables contains some nans
+					_data[i * Nrer + j] =	dSigmadE_PPx(x, beta) + _data[i*Nrer +j-1];
 				}
 			}
 		}
@@ -251,6 +283,42 @@ void EMPairProduction::performInteraction(Candidate *candidate) const {
 		if (s_kin < 4*mec2*mec2)
 			std::cout << "ERROR" << std::endl;
 		Epos = __extractPPSecondariesEnergy(E,s_kin);
+
+    // EleCa method:
+    // draw random value between 0. and maximum of corresponding cdf
+    // choose bin of s where cdf(s) = cdf_rand -> s_rand
+    double eps = 0.;
+    double epsMin = 4. * mec2 * mec2 / 4. / E; // Minimum neccessary eps to have sufficient value of Mandelstam s for interaction process
+    std::vector<double>::const_iterator it;
+    it = std::lower_bound(tabEps.begin(), tabEps.end(), epsMin);
+    size_t iE;
+    if (it == tabEps.begin())
+      iE = 0;
+    else if (it == tabEps.end())
+      iE = tabEps.size() - 1;
+    else
+      iE = it - tabEps.begin();
+    double h = random.rand() * (1-tabCDF[iE]) + tabCDF[iE];
+    it = std::upper_bound(tabCDF.begin(), tabCDF.end(), h);
+    if (it == tabCDF.begin())
+      eps = tabEps.front();
+    else if (it == tabCDF.end())
+      eps = tabEps.back();
+    else
+      eps =  tabEps[it - tabCDF.begin()];
+    binWidth = (tabEps[it-tabCDF.begin()+1] - tabEps[it-tabCDF.begin()]);
+//    eps += random.rand() * binWidth; // draw random eps uniformly distributed in bin
+
+//    Random &random = Random::instance();
+//    size_t j = random.randBin(tabCDF); // draw random bin
+//    double binWidth = (tabEps[j+1] - tabEps[j]);
+//    double eps = tabEps[j] + random.rand() * binWidth; // draw random eps uniformly distributed in bin
+//    double Eps = tabEps[j] + random.rand() * binWidth; // draw random s uniformly distributed in bin
+    if (eps < epsMin)  //TODO: Abbruchbedingung interaction kann nciht stattfinden mit diesem eps, vor oder nach scaling + ist das ok oder muss anderes eps gewählt werden ??
+      return;
+
+    eps *= (1+z);
+    Epos =  __extractPPSecondariesEnergy(E,4.*eps*E);
 
 		Vector3d pos = randomPositionInPropagationStep(candidate);
 		candidate->addSecondary(-11, (E-Epos), pos);

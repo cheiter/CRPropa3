@@ -26,6 +26,8 @@ private:
 	std::vector<double> tabs; /*< tabulated Mandelstam s in [J**2], 500 steps */
 	double limit; ///< fraction of energy loss length to limit the next step
 	bool haveElectrons;
+  std::vector<double> tabEps;
+  std::vector<double> tabCDF;
 
 public:
 	EMTripletPairProduction(PhotonField photonField = CMB, bool haveElectrons =
@@ -36,7 +38,8 @@ public:
 	void setLimit(double limit);
 
 	void initRate(std::string filename);
-	void initCumulativeRate(std::string filename);
+  void initCumulativeRate(std::string filename);
+  void initEleCaStuff(std::string filename);
 	void process(Candidate *candidate) const;
 	void performInteraction(Candidate *candidate) const;
 
