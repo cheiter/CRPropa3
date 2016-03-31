@@ -77,7 +77,7 @@ void Propagation::InitBkgArray(const std::string &BackRad) {
 		}
 	}
 
-  else if (BackRad == "CIOB" || BackRad == "IRB_PP" || BackRad == "IRB_DPP" || BackRad == "IRB_ICS" || BackRad == "IRB_TPP") {
+  else if (BackRad == "IRB" || BackRad == "IRB_PP" || BackRad == "IRB_DPP" || BackRad == "IRB_ICS" || BackRad == "IRB_TPP") {
 		double de = pow((double) eps_ph_sup_ciob / eps_ph_inf_ciob,
 				1. / POINTS_VERY_FEW);
 		double e = eps_ph_inf_ciob;
@@ -375,7 +375,8 @@ std::vector<double> Propagation::GetEtarget(Process &proc,
 	  if (Eexp > proc.feps_sup) {
 //	    std::cout << proc.GetName() << "  " <<  Eexp << " too big wrt " << proc.feps_sup << " , " << proc.feps_inf << " .. it should not interact!" << std::endl;
 	    Eexp = 0; 
-	    Etarget.push_back(0);}
+//	    Etarget.push_back(0);}
+		}
 	  else
 	    Etarget_tmp = ShootPhotonEnergyMC(Eexp, z_curr);
     Etarget.push_back(Etarget_tmp);
@@ -391,7 +392,8 @@ std::vector<double> Propagation::GetEtarget(Process &proc,
 	  if (Eexp > proc.feps_sup) {
 //	    std::cout << proc.GetName() << "  " <<  Eexp << " too big wrt " << proc.feps_sup << " , " << proc.feps_inf << " .. it should not interact!" << std::endl;
 	    Eexp = 0; 
-	    Etarget.push_back(0);}
+//	    Etarget.push_back(0);}
+    }
 	  else
 	    Etarget_tmp = ShootPhotonEnergyMC(Eexp, z_curr);	  
     Etarget.push_back(Etarget_tmp);
@@ -418,7 +420,9 @@ std::vector<double> Propagation::GetEtarget(Process &proc,
 	  if (Eexp > proc.feps_sup) {
 //	    std::cout << proc.GetName() << "  " <<  Eexp << " too big wrt " << proc.feps_sup << " , " << proc.feps_inf << " .. it should not interact!" << std::endl;
 	    Eexp = 0; 
-	    Etarget.push_back(0);}
+//	    Etarget.push_back(0);}
+	  }
+
 	  else
 	    Etarget_tmp = ShootPhotonEnergyMC(Eexp, z_curr);	  
     Etarget.push_back(Etarget_tmp);

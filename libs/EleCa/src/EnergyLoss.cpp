@@ -227,6 +227,13 @@ double dSigmadE_ICS(double Ee, double Eer, double s, double theta) {
 	}
 }
 
+double dSigmadE_ICSx(double x, double beta){
+	double q = ((1 - beta) / beta) * (1 - 1./x);
+  double A = x + 1./x;
+  return ((1 + beta) / beta) * (A + 2 * q + q * q);
+}
+
+
   double dSigmadE_PP(double Ee, double E0, double eps, double theta, double s) {
 	/*!
 	 Differential cross-section for pair production.
@@ -282,7 +289,7 @@ class PPSecondariesEnergyDistribution
 		double _dls;
 
 	public:
-		PPSecondariesEnergyDistribution(double s_min = 4. * ElectronMass * ElectronMass, double s_max =1e21,
+		PPSecondariesEnergyDistribution(double s_min = 4. * ElectronMass * ElectronMass, double s_max =1e23,
 				size_t Ns = 1000, size_t Nrer = 1000 )
 		{
 			if (s_min < 4.*ElectronMass*ElectronMass)
@@ -305,7 +312,8 @@ class PPSecondariesEnergyDistribution
 				
 				double x0 = log((1.-beta) / 2.);
 				double dx = ( log((1. + beta)/2) -  log((1.-beta) / 2.)) / (Nrer); 
-				_data[i * Nrer] = exp(x0) ; 
+//				_data[i * Nrer] = exp(x0) ; 
+				_data[i * Nrer] = dSigmadE_PPx(exp(x0),beta); 
 				for (size_t j = 1; j < Nrer; j++)
 				{
 					double x = exp(x0 + j*dx); 
@@ -395,7 +403,6 @@ double ExtractPPSecondariesEnergy(Process &proc) {
 	return __extractPPSecondariesEnergy(E0, eps, beta);
 }
 
-
 /// Hold an data array to interpolate the energy distribution on 
 class ICSSecondariesEnergyDistribution
 {
@@ -408,7 +415,7 @@ class ICSSecondariesEnergyDistribution
 		double _dls;
 
 	public:
-		ICSSecondariesEnergyDistribution(double s_min = 1.01 * ElectronMass * ElectronMass /*2.6373E+11*/, double s_max =1e21,
+		ICSSecondariesEnergyDistribution(double s_min = 1.01 * ElectronMass * ElectronMass /*2.6373E+11*/, double s_max =1e23,
 				size_t Ns = 1000, size_t Nrer = 1000 )
 		{
 			// ToDo: this boundary is just an estimate
@@ -423,31 +430,22 @@ class ICSSecondariesEnergyDistribution
 			_s_min =s_min;
 			_s_max = s_max;
 			_data = new double[Ns*Nrer];
-
-			double theta = M_PI;
-
 			_dls = (log(s_max) - log(s_min)) / (Ns);
-			double dls_min = log(s_min);
 
 			for (size_t i = 0; i < Ns; i++)
 			{
-				const double s = exp(dls_min + i*_dls);
-				double beta = (s - ElectronMass * ElectronMass) / (s +
-						ElectronMass * ElectronMass);
-
-				double eer_0 = log((1-beta) / (1+beta));
-				double deer =  - log((1-beta) / (1+beta)) / (Nrer);
-				
-				const double Ee = 1E21;
-				_data[i * Nrer] = dSigmadE_ICS(Ee, Ee * exp(eer_0), s, theta); 
-				for (size_t j = 1; j < Nrer; j++)
-				{
-					
-					double Eer = Ee * exp(eer_0 + (j)*deer); 
-					_data[i * Nrer + j] =	dSigmadE_ICS(Ee, Eer , s, theta) + _data[i * Nrer + j - 1];
+				const double s = s_min * exp(i*_dls);
+				double beta = (s - ElectronMass * ElectronMass) / (s + ElectronMass * ElectronMass);
+				double x0 = log((1.-beta) / (1.+beta));
+				double dx = -log((1. - beta)/(1.+beta)) / (Nrer);
+				_data[i*Nrer] = dSigmadE_ICSx(exp(x0),beta);
+				for (size_t j = 1; j < Nrer; j++){
+					double x = exp(x0 + j*dx);
+					_data[i * Nrer + j] = dSigmadE_ICSx(x, beta) + _data[i*Nrer+j-1];
 				}
 			}
 		}
+
 
 		// returns pointer to the the integrated distribution for a given s
 		double* getDistribution(double s)
@@ -468,9 +466,9 @@ class ICSSecondariesEnergyDistribution
 				{
 					double beta = (s - ElectronMass * ElectronMass) / (s +
 								ElectronMass * ElectronMass);
-					double eer_0 = log((1-beta) / (1+beta));
-					double deer =  - log((1-beta) / (1+beta)) / (_Nrer );
-					return exp(eer_0 + (i)*deer) * Ee; 
+					double x0 = log((1-beta) / (1+beta));
+					double dx =  - log((1-beta) / (1+beta)) / (_Nrer );
+					return exp(x0 + i*dx) * Ee; 
 				}
 			}
 			throw std::runtime_error("Grave logic error in sampling ICSSecondariesEnergyDistribution!");	

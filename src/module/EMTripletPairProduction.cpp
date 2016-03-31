@@ -25,6 +25,7 @@ void EMTripletPairProduction::setPhotonField(PhotonField photonField) {
 		initRate(getDataPath("EMTripletPairProduction_CMB.txt"));
 		initCumulativeRate(getDataPath("EMTripletPairProduction_CDF_CMB.txt"));
     initEleCaStuff(getDataPath("cdf_table_EleCa_CMB.txt"));
+//    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
 		break;
 	case IRB:  // default: Kneiske '04 IRB model
 	case IRB_Kneiske04:
@@ -32,42 +33,49 @@ void EMTripletPairProduction::setPhotonField(PhotonField photonField) {
 		initRate(getDataPath("EMTripletPairProduction_IRB_Kneiske04.txt"));
 		initCumulativeRate(getDataPath("EMTripletPairProduction_CDF_IRB_Kneiske04.txt"));
     initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
+//    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
 		break;
 	case IRB_Stecker05:
 		setDescription("EMTripletPairProduction: IRB (Stecker 2005)");
 		initRate(getDataPath("EMTripletPairProduction_IRB_Stecker05.txt"));
 		initCumulativeRate(getDataPath("EMTripletPairProduction_CDF_IRB_Stecker05.txt"));
     initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
+//    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
 		break;
 	case IRB_Franceschini08:
 		setDescription("EMTripletPairProduction: IRB (Franceschini 2008)");
 		initRate(getDataPath("EMTripletPairProduction_IRB_Franceschini08.txt"));
 		initCumulativeRate(getDataPath("EMTripletPairProduction_CDF_IRB_Franceschini08.txt"));
     initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
+//    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
 		break;
 	case IRB_Finke10:
 		setDescription("EMTripletPairProduction: IRB (Finke 2010)");
 		initRate(getDataPath("EMTripletPairProduction_IRB_Finke10.txt"));
 		initCumulativeRate(getDataPath("EMTripletPairProduction_CDF_IRB_Finke10.txt"));
     initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
+//    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
 		break;
 	case IRB_Dominguez11:
 		setDescription("EMTripletPairProduction: IRB (Dominguez 2011)");
 		initRate(getDataPath("EMTripletPairProduction_IRB_Dominguez11.txt"));
 		initCumulativeRate(getDataPath("EMTripletPairProduction_CDF_IRB_Dominguez11.txt"));
     initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
+//    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
 		break;
 	case IRB_Gilmore12:
 		setDescription("EMTripletPairProduction: IRB (Gilmore 2012)");
 		initRate(getDataPath("EMTripletPairProduction_IRB_Gilmore12.txt"));
 		initCumulativeRate(getDataPath("EMTripletPairProduction_CDF_IRB_Gilmore12.txt"));
     initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
+//    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
 		break;
 	case URB_Protheroe96:
 		setDescription("EMTripletPairProduction: URB (Protheroe 1996)");
 		initRate(getDataPath("EMTripletPairProduction_URB_Protheroe96.txt"));
 		initCumulativeRate(getDataPath("EMTripletPairProduction_CDF_URB_Protheroe96.txt"));
     initEleCaStuff(getDataPath("cdf_table_EleCa_URB.txt"));
+//    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
 		break;
 	default:
 		throw std::runtime_error(

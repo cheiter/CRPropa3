@@ -60,8 +60,8 @@ void EleCaPropagation(const std::string &inputfile,
   propagation.SetEthr(lowerEnergyThreshold / eV );
   propagation.ReadTables(getDataPath("EleCa/eleca.dat"));
 
-  std::string bkg[15] = {"URB","CMB","CIOB","CMB_PP","CMB_ICS","CMB_DPP","CMB_TPP","IRB_PP","IRB_ICS","IRB_DPP","IRB_TPP","URB_PP","URB_ICS","URB_DPP","URB_TPP"};
-  std::string bkgPath[15] = {"EleCa/URB.txt","EleCa/CMB.txt","EleCa/CIOB.txt","EleCa/CMB_PP.txt","EleCa/CMB_ICS.txt","EleCa/CMB_DPP.txt","EleCa/CMB_TPP.txt","EleCa/CIOB_PP.txt","EleCa/CIOB_ICS.txt","EleCa/CIOB_DPP.txt","EleCa/CIOB_TPP.txt","EleCa/URB_PP.txt","EleCa/URB_ICS.txt","EleCa/URB_DPP.txt","EleCa/URB_TPP.txt"};
+  std::string bkg[16] = {"URB","CMB","IRB","CMB_PP","CMB_ICS","CMB_DPP","CMB_TPP","IRB_PP","IRB_ICS","IRB_DPP","IRB_TPP","URB_PP","URB_ICS","URB_DPP","URB_TPP","CRB"};
+  std::string bkgPath[16] = {"EleCa/URB.txt","EleCa/CMB.txt","EleCa/CIOB.txt","EleCa/CMB_PP.txt","EleCa/CMB_ICS.txt","EleCa/CMB_DPP.txt","EleCa/CMB_TPP.txt","EleCa/CIOB_PP.txt","EleCa/CIOB_ICS.txt","EleCa/CIOB_DPP.txt","EleCa/CIOB_TPP.txt","EleCa/URB_PP.txt","EleCa/URB_ICS.txt","EleCa/URB_DPP.txt","EleCa/URB_TPP.txt","EleCa/All.txt"};
   for (int i = 0; i < 15; ++i){
     if (background == bkg[i]){
       propagation.ReadTables(getDataPath(bkgPath[i].c_str()));
@@ -124,7 +124,8 @@ void EleCaPropagation(const std::string &inputfile,
 					bufferPos += sprintf(buffer + bufferPos, "%i\t", iId);
 					bufferPos += sprintf(buffer + bufferPos, "%.4E\t", iE );
 					bufferPos += sprintf(buffer + bufferPos, "%i\t", iId);
-					bufferPos += sprintf(buffer + bufferPos, "%.4E\t", iE );
+					bufferPos += sprintf(buffer + bufferPos, "%.4E", iE );
+//					bufferPos += sprintf(buffer + bufferPos, "%.4E\t", iE );
 //					bufferPos += sprintf(buffer + bufferPos, "%i", p.Generation());
 					bufferPos += sprintf(buffer + bufferPos, "\n");
 

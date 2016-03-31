@@ -24,42 +24,50 @@ void EMDoublePairProduction::setPhotonField(PhotonField photonField) {
 		setDescription("EMDoublePairProduction: CMB");
 		initRate(getDataPath("EMDoublePairProduction_CMB.txt"));
     initEleCaStuff(getDataPath("cdf_table_EleCa_CMB.txt"));
+//    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
 		break;
 	case IRB:  // default: Kneiske '04 IRB model
 	case IRB_Kneiske04:
 		setDescription("EMDoublePairProduction: IRB (Kneiske 2004)");
 		initRate(getDataPath("EMDoublePairProduction_IRB_Kneiske04.txt"));
     initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
+//    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
 		break;
 	case IRB_Stecker05:
 		setDescription("EMDoublePairProduction: IRB (Stecker 2005)");
 		initRate(getDataPath("EMDoublePairProduction_IRB_Stecker05.txt"));
     initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
+//    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
 		break;
 	case IRB_Franceschini08:
 		setDescription("EMDoublePairProduction: IRB (Franceschini 2008)");
 		initRate(getDataPath("EMDoublePairProduction_IRB_Franceschini08.txt"));
     initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
+//    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
 		break;
 	case IRB_Finke10:
 		setDescription("EMDoublePairProduction: IRB (Finke 2010)");
 		initRate(getDataPath("EMDoublePairProduction_IRB_Finke10.txt"));
     initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
+//    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
 		break;
 	case IRB_Dominguez11:
 		setDescription("EMDoublePairProduction: IRB (Dominguez 2011)");
 		initRate(getDataPath("EMDoublePairProduction_IRB_Dominguez11.txt"));
     initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
+//    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
 		break;
 	case IRB_Gilmore12:
 		setDescription("EMDoublePairProduction: IRB (Gilmore 2012)");
 		initRate(getDataPath("EMDoublePairProduction_IRB_Gilmore12.txt"));
     initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
+//    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
 		break;
 	case URB_Protheroe96:
 		setDescription("EMDoublePairProduction: URB (Protheroe 1996)");
 		initRate(getDataPath("EMDoublePairProduction_URB_Protheroe96.txt"));
     initEleCaStuff(getDataPath("cdf_table_EleCa_URB.txt"));
+//    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
 		break;
 	default:
 		throw std::runtime_error(
