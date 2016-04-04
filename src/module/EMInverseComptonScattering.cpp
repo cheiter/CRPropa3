@@ -24,8 +24,8 @@ void EMInverseComptonScattering::setPhotonField(PhotonField photonField) {
 		setDescription("EMInverseComptonScattering: CMB");
 		initRate(getDataPath("EMInverseComptonScattering_CMB.txt"));
 		initCumulativeRate(getDataPath("EMInverseComptonScattering_CDF_CMB.txt"));
-    initEleCaStuff(getDataPath("cdf_table_EleCa_CMB.txt"));
-//    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
+//    initEleCaStuff(getDataPath("cdf_table_EleCa_CMB.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
 		break;
 	case IRB:  // default: Kneiske '04 IRB model
 	case IRB_Kneiske04:
@@ -39,8 +39,8 @@ void EMInverseComptonScattering::setPhotonField(PhotonField photonField) {
 		setDescription("EMInverseComptonScattering: IRB (Stecker 2005)");
 		initRate(getDataPath("EMInverseComptonScattering_IRB_Stecker05.txt"));
 		initCumulativeRate(getDataPath("EMInverseComptonScattering_CDF_IRB_Stecker05.txt"));
-    initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
-//    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
+//    initEleCaStuff(getDataPath("cdf_table_EleCa_IRB.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
 		break;
 	case IRB_Franceschini08:
 		setDescription("EMInverseComptonScattering: IRB (Franceschini 2008)");
@@ -74,8 +74,8 @@ void EMInverseComptonScattering::setPhotonField(PhotonField photonField) {
 		setDescription("EMInverseComptonScattering: URB (Protheroe 1996)");
 		initRate(getDataPath("EMInverseComptonScattering_URB_Protheroe96.txt"));
 		initCumulativeRate(getDataPath("EMInverseComptonScattering_CDF_URB_Protheroe96.txt"));
-    initEleCaStuff(getDataPath("cdf_table_EleCa_URB.txt"));
-//    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
+//    initEleCaStuff(getDataPath("cdf_table_EleCa_URB.txt"));
+    initEleCaStuff(getDataPath("cdf_table_EleCa_All.txt"));
 		break;
 	default:
 		throw std::runtime_error(
@@ -284,37 +284,37 @@ void EMInverseComptonScattering::performInteraction(Candidate *candidate) const 
 	double s = s_kin + (mass_electron*c_squared)*(mass_electron*c_squared);
 	s *= (1 + z);
 
-//  //EleCa method: 
-//  // draw random value between 0. and maximum of corresponding cdf
-//  // choose bin of s where cdf(s) = cdf_rand -> s_rand
-//  double eps = 0.;
-//  double epsMin = tabEps[0];
-//  std::vector<double>::const_iterator it;
-//  it = std::lower_bound(tabEps.begin(), tabEps.end(), epsMin);
-//  size_t iE;
-//  if (it == tabEps.begin())
-//    iE = 0;
-//  else if (it == tabEps.end())
-//    iE = tabEps.size() - 1;
-//  else
-//    iE = it - tabEps.begin();
-//  double h = random.rand() * (1-tabCDF[iE]) + tabCDF[iE];
-//  it = std::upper_bound(tabCDF.begin(), tabCDF.end(), h);
-//  if (it == tabCDF.begin())
-//    eps = tabEps.front();
-//  else if (it == tabCDF.end())
-//    eps = tabEps.back();
-//  else
-//    eps =  tabEps[it - tabCDF.begin()];
-//  binWidth = (tabEps[it-tabCDF.begin()+1] - tabEps[it-tabCDF.begin()]);
-////  eps += random.rand() * binWidth; // draw random eps uniformly distributed in bin
-//
-//  //    Random &random = Random::instance();
-//  //    size_t j = random.randBin(tabCDF); // draw random bin
-//  //    double binWidth = (tabEps[j+1] - tabEps[j]);
-//  //    double eps = tabEps[j] + random.rand() * binWidth; // draw random s uniformly distributed in bin
-//  eps *= (1.+z);
-//  s = 4.*E*eps + (mass_electron*c_squared)*(mass_electron*c_squared);
+  //EleCa method: 
+  // draw random value between 0. and maximum of corresponding cdf
+  // choose bin of s where cdf(s) = cdf_rand -> s_rand
+  double eps = 0.;
+  double epsMin = tabEps[0];
+  std::vector<double>::const_iterator it;
+  it = std::lower_bound(tabEps.begin(), tabEps.end(), epsMin);
+  size_t iE;
+  if (it == tabEps.begin())
+    iE = 0;
+  else if (it == tabEps.end())
+    iE = tabEps.size() - 1;
+  else
+    iE = it - tabEps.begin();
+  double h = random.rand() * (1-tabCDF[iE]) + tabCDF[iE];
+  it = std::upper_bound(tabCDF.begin(), tabCDF.end(), h);
+  if (it == tabCDF.begin())
+    eps = tabEps.front();
+  else if (it == tabCDF.end())
+    eps = tabEps.back();
+  else
+    eps =  tabEps[it - tabCDF.begin()];
+  binWidth = (tabEps[it-tabCDF.begin()+1] - tabEps[it-tabCDF.begin()]);
+//  eps += random.rand() * binWidth; // draw random eps uniformly distributed in bin
+
+  //    Random &random = Random::instance();
+  //    size_t j = random.randBin(tabCDF); // draw random bin
+  //    double binWidth = (tabEps[j+1] - tabEps[j]);
+  //    double eps = tabEps[j] + random.rand() * binWidth; // draw random s uniformly distributed in bin
+  eps *= (1.+z);
+  s = 4.*E*eps + (mass_electron*c_squared)*(mass_electron*c_squared);
 
 	Epost = __extractICSSecondaries(E,s);
 	if (havePhotons){
