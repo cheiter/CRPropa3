@@ -18,8 +18,9 @@ const double PhotoDisintegration::lgmax = 14.; // maximum log10(Lorentz-factor)
 const size_t PhotoDisintegration::nlg = 201; // number of Lorentz-factor steps
 
 
-PhotoDisintegration::PhotoDisintegration(PhotonField f, double limit) {
+PhotoDisintegration::PhotoDisintegration(PhotonField f, bool havePhotons, double limit) {
 	setPhotonField(f);
+	this->havePhotons = havePhotons;
 	this->limit = limit;
 }
 
@@ -30,42 +31,53 @@ void PhotoDisintegration::setPhotonField(PhotonField photonField) {
 		setDescription("PhotoDisintegration: CMB");
 		initRate(getDataPath("pd_CMB.txt"));
 		initBranching(getDataPath("pd_branching_CMB.txt"));
+		initPhotonEmission(getDataPath("pd_gamma_thin_CMB.txt"));
 		break;
 	case IRB:  // default: Kneiske '04 IRB model
 	case IRB_Kneiske04:
 		setDescription("PhotoDisintegration: IRB (Kneiske 2004)");
 		initRate(getDataPath("pd_IRB_Kneiske04.txt"));
 		initBranching(getDataPath("pd_branching_IRB_Kneiske04.txt"));
+		initPhotonEmission(getDataPath("pd_gamma_thin_IRB_Kneiske04.txt"));
 		break;
 	case IRB_Stecker05:
 		setDescription("PhotoDisintegration: IRB (Stecker 2005)");
 		initRate(getDataPath("pd_IRB_Stecker05.txt"));
 		initBranching(getDataPath("pd_branching_IRB_Stecker05.txt"));
+		initPhotonEmission(getDataPath("pd_gamma_thin_IRB_Stecker05.txt"));
 		break;
 	case IRB_Franceschini08:
 		setDescription("PhotoDisintegration: IRB (Franceschini 2008)");
 		initRate(getDataPath("pd_IRB_Franceschini08.txt"));
 		initBranching(getDataPath("pd_branching_IRB_Franceschini08.txt"));
+		initPhotonEmission(getDataPath("pd_gamma_thin_IRB_Franceschini08.txt"));
 		break;
 	case IRB_Finke10:
 		setDescription("PhotoDisintegration: IRB (Finke 2010)");
 		initRate(getDataPath("pd_IRB_Finke10.txt"));
 		initBranching(getDataPath("pd_branching_IRB_Finke10.txt"));
+		initPhotonEmission(getDataPath("pd_gamma_thin_IRB_Finke10.txt"));
 		break;
 	case IRB_Dominguez11:
 		setDescription("PhotoDisintegration: IRB (Dominguez 2011)");
 		initRate(getDataPath("pd_IRB_Dominguez11.txt"));
 		initBranching(getDataPath("pd_branching_IRB_Dominguez11.txt"));
+		initPhotonEmission(getDataPath("pd_gamma_thin_Dominguez11.txt"));
 		break;
 	case IRB_Gilmore12:
 		setDescription("PhotoDisintegration: IRB (Gilmore 12)");
 		initRate(getDataPath("pd_IRB_Gilmore12.txt"));
 		initBranching(getDataPath("pd_branching_IRB_Gilmore12.txt"));
+		initPhotonEmission(getDataPath("pd_gamma_thin_Gilmore12.txt"));
 		break;
 	default:
 		throw std::runtime_error(
 				"PhotoDisintegration: unknown photon background");
 	}
+}
+
+void PhotoDisintegration::setHavePhotons(bool havePhotons) {
+	this->havePhotons = havePhotons;
 }
 
 void PhotoDisintegration::setLimit(double limit) {
@@ -132,6 +144,50 @@ void PhotoDisintegration::initBranching(std::string filename) {
 		}
 
 		pdBranch[Z * 31 + N].push_back(branch);
+	}
+
+	infile.close();
+}
+
+void PhotoDisintegration::initPhotonEmission(std::string filename) {
+	std::ifstream infile(filename.c_str());
+	if (not infile.good())
+		throw std::runtime_error(
+				"PhotoDisintegration: could not open file " + filename);
+
+	// clear previously loaded emission probabilities
+	pdPhoton.clear();
+
+	std::string line;
+	while (std::getline(infile, line)) {
+		if (line[0] == '#')
+			continue;
+
+		std::stringstream lineStream(line);
+
+		int Z, N, Zd, Nd;
+		lineStream >> Z;
+		lineStream >> N;
+		lineStream >> Zd;
+		lineStream >> Nd;
+
+		PhotonEmission em; 
+		lineStream >> em.energy;
+		em.energy *= eV;
+
+		double r;
+		for (size_t i = 0; i < nlg; i++) {
+			lineStream >> r;
+			em.emissionProbability.push_back(r);
+		}
+		
+		int key = Z*1e6 + N*1e4 + Zd*1e2 + Nd;
+		if (pdPhoton.find(key) != pdPhoton.end()) {
+			std::vector<PhotonEmission> container;
+			pdPhoton[key] = container;
+		}
+			
+		pdPhoton[key].push_back(em);
 	}
 
 	infile.close();
@@ -213,6 +269,7 @@ void PhotoDisintegration::performInteraction(Candidate *candidate,
 	int A = massNumber(id);
 	int Z = chargeNumber(id);
 	double EpA = candidate->current.getEnergy() / A;
+	double lf = candidate->current.getLorentzFactor();
 
 	// update particle
 	int nA = A + dA;
@@ -238,6 +295,25 @@ void PhotoDisintegration::performInteraction(Candidate *candidate,
 		candidate->addSecondary(nucleusId(3, 2), EpA * 3, pos);
 	for (size_t i = 0; i < nHe4; i++)
 		candidate->addSecondary(nucleusId(4, 2), EpA * 4, pos);
+
+	// create photons
+	if (havePhotons) {
+		double z = candidate->getRedshift();
+		double lg = log10(lf * (1 + z));
+		if ((lg <= lgmin) or (lg >= lgmax))
+			return;
+		// index of closest tabulation point
+		int l = round((lg - lgmin) / (lgmax - lgmin) * (nlg - 1));
+		int key = Z*1e6 + (A-Z)*1e4 + (Z+dZ)*1e2 + (A+dA) - (Z+dZ); 
+		for (int i = 0; i < pdPhoton[key].size(); i++) {
+			if (random.rand() <= pdPhoton[key][i].emissionProbability[l]) {
+				// boost to lab frame
+				double cosTheta = 2 * random.rand() - 1;
+				double E = pdPhoton[key][i].energy * lf * (1. - cosTheta);
+				candidate->addSecondary(22, E, pos);
+			}
+		}
+	}
 }
 
 double PhotoDisintegration::lossLength(int id, double gamma, double z) {
