@@ -39,7 +39,8 @@ void PhotoDisintegration::setPhotonField(PhotonField photonField) {
 		initBranching(getDataPath("pd_branching_CMB.txt"));
 		initPhotonEmission(getDataPath("pd_gamma_opt_CMB.txt"));
 		initElastic(getDataPath("pd_elastic_new_CMB.txt"));
-		initElasticCDF(getDataPath("pd_elastic_CDF_CMB_max.txt"));
+		initElasticCDF(getDataPath("pd_elastic_new_CDF_CMB.txt"));
+//		initElasticCDF(getDataPath("pd_elastic_CDF_CMB_max.txt"));
 		break;
 	case IRB:  // default: Kneiske '04 IRB model
 	case IRB_Kneiske04:
@@ -48,7 +49,8 @@ void PhotoDisintegration::setPhotonField(PhotonField photonField) {
 		initBranching(getDataPath("pd_branching_IRB_Kneiske04.txt"));
 		initPhotonEmission(getDataPath("pd_gamma_opt_IRB_Kneiske04.txt"));
 		initElastic(getDataPath("pd_elastic_new_IRB_Kneiske04.txt"));
-		initElasticCDF(getDataPath("pd_elastic_CDF_IRB_Kneiske04_max.txt"));
+		initElasticCDF(getDataPath("pd_elastic_new_CDF_IRB_Kneiske04.txt"));
+//		initElasticCDF(getDataPath("pd_elastic_CDF_IRB_Kneiske04_max.txt"));
 		break;
 	case IRB_Stecker05:
 		setDescription("PhotoDisintegration: IRB (Stecker 2005)");
@@ -56,8 +58,8 @@ void PhotoDisintegration::setPhotonField(PhotonField photonField) {
 		initBranching(getDataPath("pd_branching_IRB_Stecker05.txt"));
 		initPhotonEmission(getDataPath("pd_gamma_opt_IRB_Stecker05.txt"));
 		initElastic(getDataPath("pd_elastic_new_IRB_Stecker05.txt"));
-//		initElasticCDF(getDataPath("pd_elastic_new_CDF_IRB_Stecker05.txt"));
-		initElasticCDF(getDataPath("pd_elastic_CDF_IRB_Kneiske04_max.txt"));
+		initElasticCDF(getDataPath("pd_elastic_new_CDF_IRB_Stecker05.txt"));
+//		initElasticCDF(getDataPath("pd_elastic_CDF_IRB_Kneiske04_max.txt"));
 		break;
 	case IRB_Franceschini08:
 		setDescription("PhotoDisintegration: IRB (Franceschini 2008)");
@@ -65,8 +67,8 @@ void PhotoDisintegration::setPhotonField(PhotonField photonField) {
 		initBranching(getDataPath("pd_branching_IRB_Franceschini08.txt"));
 		initPhotonEmission(getDataPath("pd_gamma_opt_IRB_Franceschini08.txt"));
 		initElastic(getDataPath("pd_elastic_new_IRB_Franceschini08.txt"));
-//		initElasticCDF(getDataPath("pd_elastic_new_CDF_IRB_Franceschini08.txt"));
-		initElasticCDF(getDataPath("pd_elastic_CDF_IRB_Kneiske04_max.txt"));
+		initElasticCDF(getDataPath("pd_elastic_new_CDF_IRB_Franceschini08.txt"));
+//		initElasticCDF(getDataPath("pd_elastic_CDF_IRB_Kneiske04_max.txt"));
 		break;
 	case IRB_Finke10:
 		setDescription("PhotoDisintegration: IRB (Finke 2010)");
@@ -74,8 +76,8 @@ void PhotoDisintegration::setPhotonField(PhotonField photonField) {
 		initBranching(getDataPath("pd_branching_IRB_Finke10.txt"));
 		initPhotonEmission(getDataPath("pd_gamma_opt_IRB_Finke10.txt"));
 		initElastic(getDataPath("pd_elastic_new_IRB_Finke10.txt"));
-//		initElasticCDF(getDataPath("pd_elastic_new_CDF_IRB_Finke10.txt"));
-		initElasticCDF(getDataPath("pd_elastic_CDF_IRB_Kneiske04_max.txt"));
+		initElasticCDF(getDataPath("pd_elastic_new_CDF_IRB_Finke10.txt"));
+//		initElasticCDF(getDataPath("pd_elastic_CDF_IRB_Kneiske04_max.txt"));
 		break;
 	case IRB_Dominguez11:
 		setDescription("PhotoDisintegration: IRB (Dominguez 2011)");
@@ -83,8 +85,8 @@ void PhotoDisintegration::setPhotonField(PhotonField photonField) {
 		initBranching(getDataPath("pd_branching_IRB_Dominguez11.txt"));
 		initPhotonEmission(getDataPath("pd_gamma_opt_Dominguez11.txt"));
 		initElastic(getDataPath("pd_elastic_new_IRB_Dominguez11.txt"));
-//		initElasticCDF(getDataPath("pd_elastic_new_CDF_IRB_Dominguez11.txt"));
-		initElasticCDF(getDataPath("pd_elastic_CDF_IRB_Kneiske04_max.txt"));
+		initElasticCDF(getDataPath("pd_elastic_new_CDF_IRB_Dominguez11.txt"));
+//		initElasticCDF(getDataPath("pd_elastic_CDF_IRB_Kneiske04_max.txt"));
 		break;
 	case IRB_Gilmore12:
 		setDescription("PhotoDisintegration: IRB (Gilmore 12)");
@@ -92,8 +94,8 @@ void PhotoDisintegration::setPhotonField(PhotonField photonField) {
 		initBranching(getDataPath("pd_branching_IRB_Gilmore12.txt"));
 		initPhotonEmission(getDataPath("pd_gamma_opt_Gilmore12.txt"));
 		initElastic(getDataPath("pd_elastic_new_IRB_Gilmore12.txt"));
-//		initElasticCDF(getDataPath("pd_elastic_new_CDF_IRB_Gilmore12.txt"));
-		initElasticCDF(getDataPath("pd_elastic_CDF_IRB_Kneiske04_max.txt"));
+		initElasticCDF(getDataPath("pd_elastic_new_CDF_IRB_Gilmore12.txt"));
+//		initElasticCDF(getDataPath("pd_elastic_CDF_IRB_Kneiske04_max.txt"));
 		break;
 	default:
 		throw std::runtime_error(
@@ -207,7 +209,7 @@ void PhotoDisintegration::initPhotonEmission(std::string filename) {
 		}
 		
 		int key = Z*1e6 + N*1e4 + Zd*1e2 + Nd;
-		if (pdPhoton.find(key) != pdPhoton.end()) {
+		if (pdPhoton.find(key) == pdPhoton.end()) {
 			std::vector<PhotonEmission> container;
 			pdPhoton[key] = container;
 		}
@@ -247,34 +249,76 @@ void PhotoDisintegration::initElastic(std::string filename) {
 	infile.close();
 }
 
+//void PhotoDisintegration::initElasticCDF(std::string filename) {
+//	std::ifstream infile(filename.c_str());
+//	if (not infile.good())
+//		throw std::runtime_error(
+//				"PhotoDisintegration: could not open file " + filename);
+//
+//	// clear previously loaded CDF
+//	elasticCDF.clear();
+//	elasticCDF.resize(201);
+//
+//	std::string line;
+//	int i = 0;
+//	while (std::getline(infile, line)) {
+//		if (line[0] == '#')
+//			continue;
+//		std::stringstream lineStream(line);
+//
+//		double gamma;
+//		lineStream >> gamma;
+//		lgElastic.push_back(gamma);
+//
+//		double cdf;
+//		for (size_t j = 0; j < neps; j++) {
+//			lineStream >> cdf;
+//			elasticCDF[i].push_back(cdf);
+//		}
+//		i += 1;
+//	}
+//	infile.close();
+//}
+
 void PhotoDisintegration::initElasticCDF(std::string filename) {
 	std::ifstream infile(filename.c_str());
 	if (not infile.good())
 		throw std::runtime_error(
 				"PhotoDisintegration: could not open file " + filename);
 
-	// clear previously loaded CDF
+	// clear previously loaded CDFs
 	elasticCDF.clear();
-	elasticCDF.resize(201);
 
 	std::string line;
-	int i = 0;
 	while (std::getline(infile, line)) {
 		if (line[0] == '#')
 			continue;
+
 		std::stringstream lineStream(line);
+
+		int Z, N;
+		lineStream >> Z;
+		lineStream >> N;
 
 		double gamma;
 		lineStream >> gamma;
-		lgElastic.push_back(gamma);
+		if (lgElastic.size() < nlg)
+			lgElastic.push_back(gamma);
 
-		double cdf;
-		for (size_t j = 0; j < neps; j++) {
-			lineStream >> cdf;
-			elasticCDF[i].push_back(cdf);
+		std::vector<double> cdf(neps);
+		for (size_t i = 0; i < neps; i++) {
+			lineStream >> cdf[i];
 		}
-		i += 1;
+		
+		int key = Z*1e2 + N;
+		if (elasticCDF.find(key) == elasticCDF.end()) {
+			std::vector<std::vector<double> > container;
+			elasticCDF[key] = container;
+		}
+			
+		elasticCDF[key].push_back(cdf);
 	}
+
 	infile.close();
 }
 
@@ -318,7 +362,7 @@ void PhotoDisintegration::process(Candidate *candidate) const {
 			if (elasticRate[idx].size() > 0) {
 				double rateElastic = interpolateEquidistant(lg, lgmin, lgmax, elasticRate[idx]);
 				rateElastic *= pow(1 + z, 2) * photonFieldScaling(photonField, z);
-				randDistanceElastic = -log(random.rand()) / rateElastic;
+//				randDistanceElastic = -log(random.rand()) / rateElastic;
 			}
 		}
 
@@ -345,13 +389,27 @@ void PhotoDisintegration::process(Candidate *candidate) const {
 			}
 			performInteraction(candidate, branches[i-1].channel);
 		} else {
+			std::cout << "ERR" << std::endl;
+//			// interpolate between tabulated gamma factors to get corresponding cdf
+//			size_t i = std::upper_bound(lgElastic.begin(), lgElastic.end(), lg) - lgElastic.begin() -1;
+//			double a = (lg - lgElastic[i]) / (lgElastic[i+1] - lgElastic[i]);
+//
+//			std::vector<double> cdf(neps);
+//			for (size_t j = 0; j < neps; j++) {
+//				cdf[j] = elasticCDF[i][j] + a * (elasticCDF[i+1][j] - elasticCDF[i][j]);
+//			}
+//
+//			performElasticScattering(candidate,cdf);
+
 			// interpolate between tabulated gamma factors to get corresponding cdf
 			size_t i = std::upper_bound(lgElastic.begin(), lgElastic.end(), lg) - lgElastic.begin() -1;
 			double a = (lg - lgElastic[i]) / (lgElastic[i+1] - lgElastic[i]);
 
 			std::vector<double> cdf(neps);
+			if (elasticCDF.find(Z*1e2+N) == elasticCDF.end())
+				continue;
 			for (size_t j = 0; j < neps; j++) {
-				cdf[j] = elasticCDF[i][j] + a * (elasticCDF[i+1][j] - elasticCDF[i][j]);
+				cdf[j] = elasticCDF[Z*1e2+N][i][j] + a * (elasticCDF[Z*1e2+N][i+1][j] - elasticCDF[Z*1e2+N][i][j]);
 			}
 
 			performElasticScattering(candidate,cdf);
@@ -406,24 +464,24 @@ void PhotoDisintegration::performInteraction(Candidate *candidate,
 	for (size_t i = 0; i < nHe4; i++)
 		candidate->addSecondary(nucleusId(4, 2), EpA * 4, pos);
 
-//	// create photons
-//	if (havePhotons) {
-//		double z = candidate->getRedshift();
-//		double lg = log10(lf * (1 + z));
-//		if ((lg <= lgmin) or (lg >= lgmax))
-//			return;
-//		// index of closest tabulation point
-//		int l = round((lg - lgmin) / (lgmax - lgmin) * (nlg - 1));
-//		int key = Z*1e6 + (A-Z)*1e4 + (Z+dZ)*1e2 + (A+dA) - (Z+dZ); 
-//		for (int i = 0; i < pdPhoton[key].size(); i++) {
-//			if (random.rand() <= pdPhoton[key][i].emissionProbability[l]) {
-//				// boost to lab frame
-//				double cosTheta = 2 * random.rand() - 1;
-//				double E = pdPhoton[key][i].energy * lf * (1. - cosTheta);
-//				candidate->addSecondary(22, E, pos);
-//			}
-//		}
-//	}
+	// create photons
+	if (havePhotons) {
+		double z = candidate->getRedshift();
+		double lg = log10(lf * (1 + z));
+		if ((lg <= lgmin) or (lg >= lgmax))
+			return;
+		// index of closest tabulation point
+		int l = round((lg - lgmin) / (lgmax - lgmin) * (nlg - 1));
+		int key = Z*1e6 + (A-Z)*1e4 + (Z+dZ)*1e2 + (A+dA) - (Z+dZ); 
+		for (int i = 0; i < pdPhoton[key].size(); i++) {
+			if (random.rand() <= pdPhoton[key][i].emissionProbability[l]) {
+				// boost to lab frame
+				double cosTheta = 2 * random.rand() - 1;
+				double E = pdPhoton[key][i].energy * lf * (1. - cosTheta);
+				candidate->addSecondary(22, E, pos);
+			}
+		}
+	}
 }
 
 void PhotoDisintegration::performElasticScattering(Candidate *candidate, std::vector<double> cdf) const {
